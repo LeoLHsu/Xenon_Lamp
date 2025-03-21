@@ -1,0 +1,25 @@
+{
+    "files.associations": {
+		"mainregister.h": "c",
+		"yzp_can.h": "c",
+		"dac.h": "c",
+		"dac_service.h": "c",
+		"adc.h": "c",
+		"ad9833api.h": "c",
+		"usb4port.h": "c",
+		"main.h": "c",
+		"adc_service.h": "c",
+		"systemtimebase.h": "c",
+		"phaco.h": "c",
+		"spi.h": "c",
+		"tim.h": "c",
+		"stm32h7xx.h": "c",
+		"stm32h7xx_hal.h": "c",
+		"debug.h": "c",
+		"at24c0x.h": "c",
+		"coagulation.h": "c",
+		"at24cxx.h": "c",
+		"gpio_service.h": "c",
+		"usart.h": "c"
+	}
+}
