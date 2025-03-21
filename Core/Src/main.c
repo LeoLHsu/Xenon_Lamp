@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dac.h"
+#include "dma.h"
 #include "fdcan.h"
 #include "iwdg.h"
 #include "usart.h"
@@ -91,6 +92,7 @@ int main(void)
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
+    MX_DMA_Init();
     MX_ADC1_Init();
     MX_FDCAN1_Init();
     MX_IWDG_Init();
@@ -112,6 +114,7 @@ int main(void)
         SystemTimeBase_Set_Handler();
         CAN_Handler();
         Debug_Handler();
+        Adc_Handler();
         SystemTimeBase_Clr_Handler();
         /* USER CODE BEGIN 3 */
     }

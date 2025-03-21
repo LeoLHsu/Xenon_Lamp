@@ -21,10 +21,11 @@
 #include "adc.h"
 
 /* USER CODE BEGIN 0 */
-
+uint16_t ADC1_DATA[ADC1_BUFFER_SIZE];
 /* USER CODE END 0 */
 
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 /* ADC1 init function */
 void MX_ADC1_Init(void)
@@ -106,7 +107,8 @@ void MX_ADC1_Init(void)
         Error_Handler();
     }
     /* USER CODE BEGIN ADC1_Init 2 */
-
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)ADC1_DATA, ADC1_BUFFER_SIZE);
     /* USER CODE END ADC1_Init 2 */
 
 }
@@ -144,6 +146,23 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+        /* ADC1 DMA Init */
+        /* ADC1 Init */
+        hdma_adc1.Instance = DMA1_Channel1;
+        hdma_adc1.Init.Request = DMA_REQUEST_ADC1;
+        hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+        hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+        hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+        hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+        hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+        hdma_adc1.Init.Mode = DMA_CIRCULAR;
+        hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
+        if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
+            Error_Handler();
+        }
+
+        __HAL_LINKDMA(adcHandle, DMA_Handle, hdma_adc1);
+
         /* USER CODE BEGIN ADC1_MspInit 1 */
 
         /* USER CODE END ADC1_MspInit 1 */
@@ -168,6 +187,8 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
         */
         HAL_GPIO_DeInit(GPIOA, ADC_CH0_D24V_Pin | ADC_CH1_D5V_Pin | ADC_CH2_LAMP_CURR_Pin | ADC_CH3_LAMP_VOL_Pin);
 
+        /* ADC1 DMA DeInit */
+        HAL_DMA_DeInit(adcHandle->DMA_Handle);
         /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
         /* USER CODE END ADC1_MspDeInit 1 */
@@ -175,5 +196,20 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+/**
+ * @brief  Conversion DMA half-transfer callback in non-blocking mode
+ * @param  hadc: ADC handle
+ * @retval None
+  */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    /* Invalidate Data Cache to get the updated content of the SRAM on the second half of the ADC converted data buffer: 32 bytes */
+    if (hadc->Instance == ADC1) {
+        if (ADC1Ready) {
+            ADC1OverRun = 1;
+        } else {
+            ADC1Ready = 1;
+        }
+    }
+}
 /* USER CODE END 1 */

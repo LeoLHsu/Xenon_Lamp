@@ -29,13 +29,17 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "Adc_Service.h"
 /* USER CODE END Includes */
 
 extern ADC_HandleTypeDef hadc1;
 
 /* USER CODE BEGIN Private defines */
+#define ADC_BUFFER_LOG_TWO  (3)
+#define ADC_BUFFER_CH_SIZE  (0x01 << ADC_BUFFER_LOG_TWO)
+#define ADC1_BUFFER_SIZE    ((uint32_t)(ADC_BUFFER_CH_SIZE * ADC1_RANK_MAX))
 
+extern uint16_t ADC1_DATA[];
 /* USER CODE END Private defines */
 
 void MX_ADC1_Init(void);
