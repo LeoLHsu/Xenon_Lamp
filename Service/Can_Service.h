@@ -6,7 +6,7 @@
 #define HOST_CAN_HANDLE    hfdcan1
 
 #define CAN_HOST_ID         0x10
-#define CAN_SLAVE_ID        0x11        // module itself
+#define CAN_SLAVE_ID        0x26        // module itself
 #define CAN_DATA_LEN        8
 
 /*CAN MESSAGE PROTOCOL

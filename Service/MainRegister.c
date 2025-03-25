@@ -3,7 +3,14 @@
 
 Module_Error_Union_t ModuleError;
 const uint16_t ModuleErrorList[ERROR_MAX] = {
-    (GENERAL << 12) | ERROR_RESERVE,
+    (GENERAL << 12) | ERROR_VOLTAGE_24V,
+    (GENERAL << 12) | ERROR_VOLTAGE_5V,
+    (ADVISE << 12) | ERROR_BRIGHTNESS_SETTING,
+    (SERIOUS << 12) | ERROR_LIGHT_LIFE,
+
+    (SERIOUS << 12) | ERROR_LIGHT_HAREWARE_LIFE,
+    (FATAL << 12) | ERROR_LIGHT_DAMAGE_LIFE,
+    (FATAL << 12) | ERROR_EXTERNAL_OSC,
 };
 
 const uint8_t serialNum[11] = "YYMMDDSSSS";
@@ -13,7 +20,7 @@ const uint8_t softwareTime[13] = "MMDDYYHHMMSS";
 
 uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
-    0xFFFE,
+    0xFFCC,
     0xFFFF,
     0xDFFF,
     0xFFFF,
@@ -37,6 +44,7 @@ uint16_t* GetMainReg(uint16_t addr, uint16_t* usable)
         ptr_GetMainReg = ModuleReg + (addr & 0xFF);
         *usable = 1;
     } else {
+        ptr_GetMainReg = NULL;
         *usable = 0;
     }
 
@@ -53,11 +61,11 @@ uint16_t WriteMainReg(uint16_t addr, uint16_t val)
         index = addr - MODULE_REG_BASE_ADDRESS;
         readOnlyArray = moduleRegReadOnlyBit[(index & 0x00F0) >> 4];
         if ((readOnlyArray & (0x01 << ((index & 0x000F)))) == 0) {  // No read only
-            if (&ModuleReg[index] == &R_ENABLE) {
-                if (val > 0) {
-                    ModuleError.bits.reserve = 1;
+            if (&ModuleReg[index] == &R_BRIGHTNESS_SET) {
+                if (val > 100) {
+                    ModuleError.bits.brightnessSeting = 1;
                 } else {
-                    ModuleError.bits.reserve = 0;
+                    ModuleError.bits.brightnessSeting = 0;
                     ModuleReg[index] = val;
                 }
             } else {

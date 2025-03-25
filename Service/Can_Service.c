@@ -166,18 +166,14 @@ void Can_Error_Service(void)
 {
     static Module_Error_Union_t Error_Temp = {0};
     uint8_t i = 0;
-    Error_Operate_t action;
 
     if (Error_Temp.flg != ModuleError.flg) {
         for (i = 0; i < 32; i++) {
             if (((Error_Temp.flg >> i) & 0x0001) != ((ModuleError.flg >> i) & 0x0001)) {
                 if (((ModuleError.flg >> i) & 0x0001)) {
-                    action = REPORT;
-                } else {
-                    action = CLEAN;
+                    R_ERROR_INFO = ModuleErrorList[i];
+                    CAN_Response_ReadReg(CAN_SLAVE_ID, R_ERROR_INFO_ADDR, 1);
                 }
-                R_ERROR_INFO = (action << 15) | ModuleErrorList[i];
-                CAN_Response_ReadReg(CAN_SLAVE_ID, R_ERROR_INFO_ADDR, 1);
             }
         }
         Error_Temp.flg = ModuleError.flg;
