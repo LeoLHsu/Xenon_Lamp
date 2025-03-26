@@ -1,4 +1,5 @@
 #include "MainRegister.h"
+#include "Xenon_Lamp.h"
 #include <string.h>
 
 Module_Error_Union_t ModuleError;
@@ -62,7 +63,7 @@ uint16_t WriteMainReg(uint16_t addr, uint16_t val)
         readOnlyArray = moduleRegReadOnlyBit[(index & 0x00F0) >> 4];
         if ((readOnlyArray & (0x01 << ((index & 0x000F)))) == 0) {  // No read only
             if (&ModuleReg[index] == &R_BRIGHTNESS_SET) {
-                if (val > 100) {
+                if (val > R_BRIGHTNESS_SET_MAX) {
                     ModuleError.bits.brightnessSeting = 1;
                 } else {
                     ModuleError.bits.brightnessSeting = 0;

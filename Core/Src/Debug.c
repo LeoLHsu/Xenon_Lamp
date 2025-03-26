@@ -247,10 +247,6 @@ void Debug_Handler(void)
         Debug_Timeout_WDT_Service_5ms();
     }
 
-    if (SYS_TIM_FLAG_500MS) {
-        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    }
-
     if (SYS_TIM_FLAG_1000MS) {
         printData("Second %d\n", (int)SystemTimeBase_Second);
         printMsg("\n");
@@ -265,6 +261,12 @@ void Debug_Handler(void)
         switch (Debug_Key) {
             case 0x7F:
                 Debug_ResetFlag = 1;
+                break;
+            case 'a':
+                R_BRIGHTNESS_SET = 0;
+                break;
+            case 'A':
+                R_BRIGHTNESS_SET = 100;
                 break;
             default:
                 break;

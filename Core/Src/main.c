@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include "Can_Service.h"
+#include "Xenon_Lamp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -115,6 +116,7 @@ int main(void)
         CAN_Handler();
         Debug_Handler();
         Adc_Handler();
+        Xenon_Lamp_Service();
         SystemTimeBase_Clr_Handler();
         /* USER CODE BEGIN 3 */
     }
