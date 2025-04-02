@@ -2,6 +2,7 @@
 #include "MainRegister.h"
 #include "Adc_Service.h"
 #include "dac.h"
+#include "UserPref.h"
 #include <math.h>
 
 Xenon_Ctrl_Step_t XenonLampCtrlStep = ESTABLISH_CURR;
@@ -11,6 +12,9 @@ int16_t XenonLampCtrlCnt = 0;
 float XenonLampVol = 0.f;
 float XenonLampCurrSet = 0.f;
 float XenonLampCurr = 0.f;
+
+uint32_t XenonLampWorkTimer_1s;
+uint32_t XenonLampWorkTimer_Min;
 
 void Set_Xenon_Lamp_Enable(uint8_t newState)
 {
@@ -28,6 +32,15 @@ void Set_Xenon_Lamp_Curr(float newCurr)
     }
 
     HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, newDacValue);
+}
+
+void Xenon_Lamp_Initial(void)
+{
+    R_LIGHT_RESET = 0;
+    XenonLampWorkTimer_1s = 0;
+    XenonLampWorkTimer_Min = UserSettingLampWorkTimerMin;
+    R_LIGHT_WORK_HOUR = UserSettingLampWorkTimerMin / 60;
+    R_LIGHT_LIFE_HOUR = UserSettingLampLifeTimeHr;
 }
 
 void Xenon_Lamp_Service(void)
@@ -89,6 +102,7 @@ void Xenon_Lamp_Service(void)
                     }
                     break;
                 case TURN_ON_FAILED:
+                    R_BRIGHTNESS_SET = 0;
                     Set_Xenon_Lamp_Enable(OFF);
                     Set_Xenon_Lamp_Curr(0);
                     break;
@@ -110,5 +124,27 @@ void Xenon_Lamp_Service(void)
 
     if (SYS_TIM_FLAG_500MS) {
         HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    }
+
+    if (SYS_TIM_FLAG_1000MS) {
+        if (R_LIGHT_RESET) {
+            R_LIGHT_RESET = 0;
+            XenonLampWorkTimer_1s = 0;
+            XenonLampWorkTimer_Min = 0;
+        } else {
+            if (R_BRIGHTNESS_SET != 0) {
+                INC_PARA_U32(XenonLampWorkTimer_1s);
+                if (XenonLampWorkTimer_1s >= 60) {
+                    XenonLampWorkTimer_1s = 0;
+                    INC_PARA_U32(XenonLampWorkTimer_Min);
+                }
+            }
+        }
+        R_LIGHT_WORK_HOUR = XenonLampWorkTimer_Min / 60;
+        if (R_LIGHT_WORK_HOUR >= R_LIGHT_LIFE_HOUR) {
+            ModuleError.bits.lightLife = 1;
+        } else {
+            ModuleError.bits.lightLife = 0;
+        }
     }
 }

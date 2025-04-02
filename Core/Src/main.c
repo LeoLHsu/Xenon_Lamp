@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include "Can_Service.h"
+#include "UserPref.h"
 #include "Xenon_Lamp.h"
 /* USER CODE END Includes */
 
@@ -108,6 +109,7 @@ int main(void)
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+    Xenon_Lamp_Initial();
     __enable_irq();
     while (1) {
         /* USER CODE END WHILE */
@@ -117,6 +119,7 @@ int main(void)
         Debug_Handler();
         Adc_Handler();
         Xenon_Lamp_Service();
+        EE_Setting_Handler();
         SystemTimeBase_Clr_Handler();
         /* USER CODE BEGIN 3 */
     }

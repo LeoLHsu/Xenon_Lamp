@@ -51,5 +51,18 @@ void MX_IWDG_Init(void)
 }
 
 /* USER CODE BEGIN 1 */
+void Set_IWDG1_Timeout(uint16_t timeout_ms)
+{
+    if (timeout_ms > 0x0FFF) {
+        timeout_ms = 0x0FFF;
+    }
 
+    hiwdg.Instance = IWDG;
+    hiwdg.Init.Prescaler = IWDG_PRESCALER_32;
+    hiwdg.Init.Window = timeout_ms;
+    hiwdg.Init.Reload = timeout_ms;
+    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
+        Error_Handler();
+    }
+}
 /* USER CODE END 1 */

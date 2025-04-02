@@ -21,6 +21,10 @@ typedef enum {
     TURN_ON_FAILED
 } Xenon_Ctrl_Step_t;
 
+extern uint32_t XenonLampWorkTimer_1s;
+extern uint32_t XenonLampWorkTimer_Min;
+
+extern void Xenon_Lamp_Initial(void);
 extern void Xenon_Lamp_Service(void);
 
 #endif

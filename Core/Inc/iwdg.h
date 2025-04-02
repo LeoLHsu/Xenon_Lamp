@@ -41,7 +41,7 @@ extern IWDG_HandleTypeDef hiwdg;
 void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+extern void Set_IWDG1_Timeout(uint16_t timeout_ms);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
