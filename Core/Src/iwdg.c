@@ -24,29 +24,29 @@
 
 /* USER CODE END 0 */
 
-IWDG_HandleTypeDef hiwdg;
+IWDG_HandleTypeDef hiwdg1;
 
-/* IWDG init function */
-void MX_IWDG_Init(void)
+/* IWDG1 init function */
+void MX_IWDG1_Init(void)
 {
 
-    /* USER CODE BEGIN IWDG_Init 0 */
+    /* USER CODE BEGIN IWDG1_Init 0 */
 
-    /* USER CODE END IWDG_Init 0 */
+    /* USER CODE END IWDG1_Init 0 */
 
-    /* USER CODE BEGIN IWDG_Init 1 */
+    /* USER CODE BEGIN IWDG1_Init 1 */
 
-    /* USER CODE END IWDG_Init 1 */
-    hiwdg.Instance = IWDG;
-    hiwdg.Init.Prescaler = IWDG_PRESCALER_32;
-    hiwdg.Init.Window = 100;
-    hiwdg.Init.Reload = 100;
-    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
+    /* USER CODE END IWDG1_Init 1 */
+    hiwdg1.Instance = IWDG1;
+    hiwdg1.Init.Prescaler = IWDG_PRESCALER_32;
+    hiwdg1.Init.Window = 100;
+    hiwdg1.Init.Reload = 100;
+    if (HAL_IWDG_Init(&hiwdg1) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN IWDG_Init 2 */
+    /* USER CODE BEGIN IWDG1_Init 2 */
 
-    /* USER CODE END IWDG_Init 2 */
+    /* USER CODE END IWDG1_Init 2 */
 
 }
 
@@ -57,11 +57,11 @@ void Set_IWDG1_Timeout(uint16_t timeout_ms)
         timeout_ms = 0x0FFF;
     }
 
-    hiwdg.Instance = IWDG;
-    hiwdg.Init.Prescaler = IWDG_PRESCALER_32;
-    hiwdg.Init.Window = timeout_ms;
-    hiwdg.Init.Reload = timeout_ms;
-    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
+    hiwdg1.Instance = IWDG1;
+    hiwdg1.Init.Prescaler = IWDG_PRESCALER_32;
+    hiwdg1.Init.Window = timeout_ms;
+    hiwdg1.Init.Reload = timeout_ms;
+    if (HAL_IWDG_Init(&hiwdg1) != HAL_OK) {
         Error_Handler();
     }
 }

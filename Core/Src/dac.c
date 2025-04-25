@@ -49,14 +49,10 @@ void MX_DAC1_Init(void)
 
     /** DAC channel OUT1 config
     */
-    sConfig.DAC_HighFrequency = DAC_HIGH_FREQUENCY_INTERFACE_MODE_AUTOMATIC;
-    sConfig.DAC_DMADoubleDataMode = DISABLE;
-    sConfig.DAC_SignedFormat = DISABLE;
     sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
     sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
-    sConfig.DAC_Trigger2 = DAC_TRIGGER_NONE;
     sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
-    sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_EXTERNAL;
+    sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
     sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
     if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK) {
         Error_Handler();
@@ -76,7 +72,7 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
 
         /* USER CODE END DAC1_MspInit 0 */
         /* DAC1 clock enable */
-        __HAL_RCC_DAC1_CLK_ENABLE();
+        __HAL_RCC_DAC12_CLK_ENABLE();
 
         __HAL_RCC_GPIOA_CLK_ENABLE();
         /**DAC1 GPIO Configuration
@@ -101,7 +97,7 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
 
         /* USER CODE END DAC1_MspDeInit 0 */
         /* Peripheral clock disable */
-        __HAL_RCC_DAC1_CLK_DISABLE();
+        __HAL_RCC_DAC12_CLK_DISABLE();
 
         /**DAC1 GPIO Configuration
         PA4     ------> DAC1_OUT1

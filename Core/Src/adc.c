@@ -21,7 +21,7 @@
 #include "adc.h"
 
 /* USER CODE BEGIN 0 */
-uint16_t ADC1_DATA[ADC1_BUFFER_SIZE];
+uint16_t ADC1_DATA[ADC1_BUFFER_SIZE] __attribute__((section(".RAM_D1")));
 /* USER CODE END 0 */
 
 ADC_HandleTypeDef hadc1;
@@ -45,20 +45,19 @@ void MX_ADC1_Init(void)
     /** Common config
     */
     hadc1.Instance = ADC1;
-    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.GainCompensation = 0;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    hadc1.Init.Resolution = ADC_RESOLUTION_16B;
     hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
     hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
     hadc1.Init.ContinuousConvMode = ENABLE;
-    hadc1.Init.NbrOfConversion = 4;
+    hadc1.Init.NbrOfConversion = 5;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = DISABLE;
+    hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;
     hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+    hadc1.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
     hadc1.Init.OversamplingMode = DISABLE;
     if (HAL_ADC_Init(&hadc1) != HAL_OK) {
         Error_Handler();
@@ -73,19 +72,20 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Channel = ADC_CHANNEL_16;
     sConfig.Rank = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLETIME_24CYCLES_5;
+    sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5;
     sConfig.SingleDiff = ADC_SINGLE_ENDED;
     sConfig.OffsetNumber = ADC_OFFSET_NONE;
     sConfig.Offset = 0;
+    sConfig.OffsetSignedSaturation = DISABLE;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
     }
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_2;
+    sConfig.Channel = ADC_CHANNEL_14;
     sConfig.Rank = ADC_REGULAR_RANK_2;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
@@ -93,7 +93,7 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_3;
+    sConfig.Channel = ADC_CHANNEL_17;
     sConfig.Rank = ADC_REGULAR_RANK_3;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
@@ -101,13 +101,21 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_4;
+    sConfig.Channel = ADC_CHANNEL_19;
     sConfig.Rank = ADC_REGULAR_RANK_4;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
     }
+
+    /** Configure Regular Channel
+    */
+    sConfig.Channel = ADC_CHANNEL_15;
+    sConfig.Rank = ADC_REGULAR_RANK_5;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        Error_Handler();
+    }
     /* USER CODE BEGIN ADC1_Init 2 */
-    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
     HAL_ADC_Start_DMA(&hadc1, (uint32_t *)ADC1_DATA, ADC1_BUFFER_SIZE);
     /* USER CODE END ADC1_Init 2 */
 
@@ -117,38 +125,30 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 {
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
     if (adcHandle->Instance == ADC1) {
         /* USER CODE BEGIN ADC1_MspInit 0 */
 
         /* USER CODE END ADC1_MspInit 0 */
-
-        /** Initializes the peripherals clocks
-        */
-        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-        PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-            Error_Handler();
-        }
-
         /* ADC1 clock enable */
         __HAL_RCC_ADC12_CLK_ENABLE();
 
         __HAL_RCC_GPIOA_CLK_ENABLE();
         /**ADC1 GPIO Configuration
-        PA0     ------> ADC1_IN1
-        PA1     ------> ADC1_IN2
-        PA2     ------> ADC1_IN3
-        PA3     ------> ADC1_IN4
+        PA0     ------> ADC1_INP16
+        PA1     ------> ADC1_INP17
+        PA2     ------> ADC1_INP14
+        PA3     ------> ADC1_INP15
+        PA5     ------> ADC1_INP19
         */
-        GPIO_InitStruct.Pin = ADC_CH0_D24V_Pin | ADC_CH1_D5V_Pin | ADC_CH2_LAMP_CURR_Pin | ADC_CH3_LAMP_VOL_Pin;
+        GPIO_InitStruct.Pin = ADC_CH0_D24V_Pin | ADC_CH2_LAMP_VOL_Pin | ADC_CH1_D12V_Pin | ADC_CH4_TEMP_Pin
+                              | ADC_CH3_LAMP_CURR_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
         /* ADC1 DMA Init */
         /* ADC1 Init */
-        hdma_adc1.Instance = DMA1_Channel1;
+        hdma_adc1.Instance = DMA1_Stream0;
         hdma_adc1.Init.Request = DMA_REQUEST_ADC1;
         hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
         hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -157,6 +157,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
         hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
         hdma_adc1.Init.Mode = DMA_CIRCULAR;
         hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
+        hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
             Error_Handler();
         }
@@ -180,12 +181,14 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
         __HAL_RCC_ADC12_CLK_DISABLE();
 
         /**ADC1 GPIO Configuration
-        PA0     ------> ADC1_IN1
-        PA1     ------> ADC1_IN2
-        PA2     ------> ADC1_IN3
-        PA3     ------> ADC1_IN4
+        PA0     ------> ADC1_INP16
+        PA1     ------> ADC1_INP17
+        PA2     ------> ADC1_INP14
+        PA3     ------> ADC1_INP15
+        PA5     ------> ADC1_INP19
         */
-        HAL_GPIO_DeInit(GPIOA, ADC_CH0_D24V_Pin | ADC_CH1_D5V_Pin | ADC_CH2_LAMP_CURR_Pin | ADC_CH3_LAMP_VOL_Pin);
+        HAL_GPIO_DeInit(GPIOA, ADC_CH0_D24V_Pin | ADC_CH2_LAMP_VOL_Pin | ADC_CH1_D12V_Pin | ADC_CH4_TEMP_Pin
+                        | ADC_CH3_LAMP_CURR_Pin);
 
         /* ADC1 DMA DeInit */
         HAL_DMA_DeInit(adcHandle->DMA_Handle);
@@ -197,6 +200,19 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
 /* USER CODE BEGIN 1 */
 /**
+  * @brief  Conversion complete callback in non-blocking mode
+  * @param  hadc: ADC handle
+  * @retval None
+  */
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    /* Invalidate Data Cache to get the updated content of the SRAM on the first half of the ADC converted data buffer: 32 bytes */
+    if (hadc->Instance == ADC1) {
+        SCB_InvalidateDCache_by_Addr((uint32_t *)&ADC1_DATA[0], ADC1_BUFFER_SIZE >> 1);
+    }
+}
+
+/**
  * @brief  Conversion DMA half-transfer callback in non-blocking mode
  * @param  hadc: ADC handle
  * @retval None
@@ -205,6 +221,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     /* Invalidate Data Cache to get the updated content of the SRAM on the second half of the ADC converted data buffer: 32 bytes */
     if (hadc->Instance == ADC1) {
+        SCB_InvalidateDCache_by_Addr((uint32_t *)&ADC1_DATA[ADC1_BUFFER_SIZE >> 1], ADC1_BUFFER_SIZE >> 1);
         if (ADC1Ready) {
             ADC1OverRun = 1;
         } else {

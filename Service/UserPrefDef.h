@@ -6,7 +6,7 @@
 typedef struct {
     uint32_t lampWorkTimer_Min;
     uint32_t lampLifeTime_Hr;
-    uint32_t reserve[1];
+    uint32_t reserve[3];
     uint32_t CRC16;
 } UserSettingType;
 
@@ -14,14 +14,17 @@ typedef struct {
     uint32_t Index;
     UserSettingType User;
     uint32_t Inv_Index;
-} EEPromType;                       // aligned to double word
+} EEPromType;                       // aligned to FLASH_NB_32BITWORD_IN_FLASHWORD
 
 #define FLASH_EMPTY                 (0xFF)
-#define EEPROM_BASE                 FLASH_BASE
-
+#ifdef DUAL_BANK
+#define EEPROM_BASE                 FLASH_BANK2_BASE
+#else
+#define EEPROM_BASE                 FLASH_BANK1_BASE
+#endif
 #define USER_FLASH_SECTOR_NUM       (1)     // 1 OR 2
 #if (USER_FLASH_SECTOR_NUM == 1)
-#define USER_FLASH_SECTOR_SIZE      FLASH_SECTOR_SIZE
+#define USER_FLASH_SECTOR_SIZE      0x2000
 #else
 #define USER_FLASH_SECTOR_SIZE      FLASH_SECTOR_SIZE
 #endif

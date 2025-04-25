@@ -38,7 +38,6 @@ void MX_FDCAN1_Init(void)
 
     /* USER CODE END FDCAN1_Init 1 */
     hfdcan1.Instance = FDCAN1;
-    hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
     hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
     hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
     hfdcan1.Init.AutoRetransmission = DISABLE;
@@ -52,9 +51,20 @@ void MX_FDCAN1_Init(void)
     hfdcan1.Init.DataSyncJumpWidth = 8;
     hfdcan1.Init.DataTimeSeg1 = 31;
     hfdcan1.Init.DataTimeSeg2 = 8;
+    hfdcan1.Init.MessageRAMOffset = 0;
     hfdcan1.Init.StdFiltersNbr = 1;
     hfdcan1.Init.ExtFiltersNbr = 0;
+    hfdcan1.Init.RxFifo0ElmtsNbr = 0;
+    hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+    hfdcan1.Init.RxFifo1ElmtsNbr = 0;
+    hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+    hfdcan1.Init.RxBuffersNbr = 0;
+    hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
+    hfdcan1.Init.TxEventsNbr = 0;
+    hfdcan1.Init.TxBuffersNbr = 0;
+    hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
     hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+    hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
     if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
         Error_Handler();
     }
@@ -68,20 +78,10 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
 {
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
     if (fdcanHandle->Instance == FDCAN1) {
         /* USER CODE BEGIN FDCAN1_MspInit 0 */
 
         /* USER CODE END FDCAN1_MspInit 0 */
-
-        /** Initializes the peripherals clocks
-        */
-        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
-        PeriphClkInit.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-            Error_Handler();
-        }
-
         /* FDCAN1 clock enable */
         __HAL_RCC_FDCAN_CLK_ENABLE();
 
