@@ -65,7 +65,26 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#ifdef BOOTLOADER
 
+/** @brief  Vector base address configuration. It should no longer be at the start of
+  *         flash memory but moved forward because the first part of flash is
+  *         reserved for the bootloader. Note that this is already done by the
+  *         bootloader before starting this program. Unfortunately, function
+  *         SystemInit() overwrites this change again.
+  * @return none.
+  */
+static void VectorBase_Config(void)
+{
+    /* The constant array with vectors of the vector table is declared externally in the
+     * c-startup code.
+     */
+    extern const unsigned long g_pfnVectors[];
+
+    /* Remap the vector table to where the vector table is located for this program. */
+    SCB->VTOR = (unsigned long)&g_pfnVectors[0];
+}
+#endif
 /* USER CODE END 0 */
 
 /**
@@ -75,7 +94,10 @@ static void MPU_Config(void);
 int main(void)
 {
     /* USER CODE BEGIN 1 */
-    __disable_irq();
+#ifdef BOOTLOADER
+    /* Configure the vector table base address. */
+    VectorBase_Config();
+#endif
     /* USER CODE END 1 */
 
     /* MPU Configuration--------------------------------------------------------*/
@@ -123,11 +145,18 @@ int main(void)
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+    EE_Read_Setting();
     Xenon_Lamp_Initial();
-    __enable_irq();
     while (1) {
         /* USER CODE END WHILE */
-
+        HAL_IWDG_Refresh(&hiwdg1);
+        SystemTimeBase_Set_Handler();
+        CAN_Handler();
+        Debug_Handler();
+        Adc_Handler();
+        Xenon_Lamp_Service();
+        EE_Setting_Handler();
+        SystemTimeBase_Clr_Handler();
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -157,6 +186,10 @@ void SystemClock_Config(void)
 
     while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
+    /** Macro to configure the PLL clock source
+    */
+    __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
+
     /** Initializes the RCC Oscillators according to the specified parameters
     * in the RCC_OscInitTypeDef structure.
     */
@@ -174,7 +207,34 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
     RCC_OscInitStruct.PLL.PLLFRACN = 0;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-        Error_Handler();
+        /** Deinitializes RCC and clear RCC_OscInitTypeDef structure
+        */
+        HAL_RCC_DeInit();
+        memset(&RCC_OscInitStruct, 0x00, sizeof(RCC_OscInitStruct));
+        /** Macro to configure the PLL clock source
+        */
+        __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSI);
+
+        /** Initializes the RCC Oscillators according to the specified parameters
+        * in the RCC_OscInitTypeDef structure.
+        */
+        RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSI;
+        RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
+        RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+        RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+        RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+        RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+        RCC_OscInitStruct.PLL.PLLM = 4;
+        RCC_OscInitStruct.PLL.PLLN = 60;
+        RCC_OscInitStruct.PLL.PLLP = 2;
+        RCC_OscInitStruct.PLL.PLLQ = 8;
+        RCC_OscInitStruct.PLL.PLLR = 2;
+        RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
+        RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+        RCC_OscInitStruct.PLL.PLLFRACN = 0;
+        if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+            Error_Handler();
+        }
     }
 
     /** Initializes the CPU, AHB and APB buses clocks
@@ -205,17 +265,31 @@ void PeriphCommonClock_Config(void)
 
     /** Initializes the peripherals clock
     */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_FDCAN;
-    PeriphClkInitStruct.PLL2.PLL2M = 5;
-    PeriphClkInitStruct.PLL2.PLL2N = 160;
-    PeriphClkInitStruct.PLL2.PLL2P = 16;
-    PeriphClkInitStruct.PLL2.PLL2Q = 20;
-    PeriphClkInitStruct.PLL2.PLL2R = 2;
-    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_2;
-    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-    PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-    PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
-    PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+    if (__HAL_RCC_GET_PLL_OSCSOURCE() == RCC_PLLSOURCE_HSE) {
+        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_FDCAN;
+        PeriphClkInitStruct.PLL2.PLL2M = 5;
+        PeriphClkInitStruct.PLL2.PLL2N = 160;
+        PeriphClkInitStruct.PLL2.PLL2P = 16;
+        PeriphClkInitStruct.PLL2.PLL2Q = 20;
+        PeriphClkInitStruct.PLL2.PLL2R = 2;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_2;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+        PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+        PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+    } else {
+        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_FDCAN;
+        PeriphClkInitStruct.PLL2.PLL2M = 4;
+        PeriphClkInitStruct.PLL2.PLL2N = 50;
+        PeriphClkInitStruct.PLL2.PLL2P = 16;
+        PeriphClkInitStruct.PLL2.PLL2Q = 20;
+        PeriphClkInitStruct.PLL2.PLL2R = 2;
+        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+        PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+        PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+    }
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
         Error_Handler();
     }
@@ -242,7 +316,7 @@ void MPU_Config(void)
     MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
     MPU_InitStruct.SubRegionDisable = 0x0;
     MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-    MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+    MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
     MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
     MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
     MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;

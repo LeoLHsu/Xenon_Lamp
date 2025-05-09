@@ -29,7 +29,6 @@ const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
 
 void MainReg_Initial(void)
 {
-    /* Lack of recover function from the EEPROM, By Leo */
     memset(ModuleReg, 0x00, sizeof(ModuleReg));
     memcpy(R_SERIAL_NUM_PTR, serialNum, 10);
     memcpy(R_HARDWARE_VER_PTR, hardwareVer, 2);
