@@ -149,6 +149,8 @@ int main(void)
     Xenon_Lamp_Initial();
     while (1) {
         /* USER CODE END WHILE */
+
+        /* USER CODE BEGIN 3 */
         HAL_IWDG_Refresh(&hiwdg1);
         SystemTimeBase_Set_Handler();
         CAN_Handler();
@@ -157,7 +159,6 @@ int main(void)
         Xenon_Lamp_Service();
         EE_Setting_Handler();
         SystemTimeBase_Clr_Handler();
-        /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
 }
@@ -185,10 +186,6 @@ void SystemClock_Config(void)
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
     while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-
-    /** Macro to configure the PLL clock source
-    */
-    __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
 
     /** Initializes the RCC Oscillators according to the specified parameters
     * in the RCC_OscInitTypeDef structure.
