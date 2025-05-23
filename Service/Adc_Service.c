@@ -14,64 +14,78 @@ uint16_t ADC1MedianFilterArray[ADC1_RANK_MAX][ADC_BUFFER_CH_SIZE];
 volatile uint8_t ADC1Ready, ADC1OverRun;
 uint16_t ADC1FilterResult[ADC1_RANK_MAX];
 
-void Swap(uint16_t* a, uint16_t* b)
-{
-    uint16_t temp = *a;
-    *a = *b;
-    *b = temp;
-}
+typedef struct {
+    float temp;
+    float resist;
+} TempResistPair;
 
-uint16_t Partition(uint16_t arr[], uint16_t low, uint16_t high)
-{
-    uint16_t pivot = arr[high];
-    uint16_t i = (low - 1);
+const TempResistPair B3950_10k_Table[] = {
+    {-30, 167200.0f},
+    {-25, 127500.0f},
+    {-20, 96190.0f},
+    {-15, 73560.0f},
+    {-10, 56760.0f},
+    {-5,  44200.0f},
+    {0,   34390.0f},
+    {5,   27010.0f},
+    {10,  21360.0f},
+    {15,  17020.0f},
+    {20,  13590.0f},
+    {25,  10000.0f},
+    {30,  7435.0f},
+    {35,  5573.0f},
+    {40,  5390.0f},
+    {45,  4246.0f},
+    {50,  3984.0f},
+    {55,  3151.0f},
+    {60,  2991.0f},
+    {65,  2385.0f},
+    {70,  2278.0f},
+    {75,  1831.0f},
+    {80,  1758.0f},
+    {85,  1424.0f},
+    {90,  1372.0f},
+    {95,  1119.0f},
+    {100, 1083.0f},
+    {105, 889.7f},
+    {110, 863.3f},
+    {115, 713.5f},
+    {120, 693.7f},
+    {125, 576.5f},
+    {130, 561.6f},
+};
 
-    for (uint16_t j = low; j <= high - 1; j++) {
-        if (arr[j] <= pivot) {
-            i++;
-            Swap(&arr[i], &arr[j]);
+#define TEMP_TABLE_SIZE (sizeof(B3950_10k_Table) / sizeof(B3950_10k_Table[0]))
+
+float Calculate_Temperature(uint16_t adcValue)
+{
+    float voltage = (adcValue / 65535.0f) * ADC_DAC_VEF_VOL;
+    if (voltage <= 0.001f) {
+        return B3950_10k_Table[0].temp;
+    } else if (voltage >= ADC_DAC_VEF_VOL - 0.001f) {
+        return B3950_10k_Table[TEMP_TABLE_SIZE - 1].temp;
+    }
+
+    float ntcResistance = ((3.3f - voltage) * 4.7e3f) / voltage;        // 3.3V power supply, 4.7K pull-down resistor
+    if (ntcResistance >= B3950_10k_Table[0].resist) {
+        return B3950_10k_Table[0].temp;
+    } else if (ntcResistance <= B3950_10k_Table[TEMP_TABLE_SIZE - 1].resist) {
+        return B3950_10k_Table[TEMP_TABLE_SIZE - 1].temp;
+    }
+
+    uint16_t i;
+    for (i = 0; i < TEMP_TABLE_SIZE - 1; i++) {
+        if ((ntcResistance <= B3950_10k_Table[i].resist) && (ntcResistance >= B3950_10k_Table[i + 1].resist)) {
+            break;
         }
     }
-    Swap(&arr[i + 1], &arr[high]);
-    return (i + 1);
-}
 
-uint16_t Quick_Select(uint16_t arr[], uint16_t low, uint16_t high, uint16_t num)
-{
-    if (low == high) {
-        return arr[low];
-    }
+    float x0 = B3950_10k_Table[i].resist;
+    float x1 = B3950_10k_Table[i + 1].resist;
+    float y0 = B3950_10k_Table[i].temp;
+    float y1 = B3950_10k_Table[i + 1].temp;
 
-    int pivot_index = Partition(arr, low, high);
-
-    if (num == pivot_index) {
-        return arr[num];
-    } else if (num < pivot_index) {
-        return Quick_Select(arr, low, pivot_index - 1, num);
-    } else {
-        return Quick_Select(arr, pivot_index + 1, high, num);
-    }
-}
-
-uint16_t Find_Median(uint16_t array[], uint16_t num)
-{
-    uint16_t middleIndex1, middleIndex2;
-    uint16_t median1, median2;
-    uint16_t median;
-
-    if ((num & 0x01) == 0) {
-        middleIndex1 = (num >> 1) - 1;
-        middleIndex2 = (num >> 1);
-        median1 = Quick_Select(array, 0, num - 1, middleIndex1);
-        median2 = Quick_Select(array, 0, num - 1, middleIndex2);
-        median = ((median1 + median2) >> 1);
-    } else {
-        middleIndex1 = (num >> 1);
-        median1 = Quick_Select(array, 0, num - 1, middleIndex1);
-        median = median1;
-    }
-
-    return median;
+    return y0 + (x0 - ntcResistance) * (y1 - y0) / (x0 - x1);
 }
 
 uint16_t Calculate_Average(const uint16_t* array, uint32_t num)
@@ -150,20 +164,12 @@ void Adc1_Voltage_Check_Service(void)
         ModuleError.bits.vol24V = 0;
     }
 
-    if (    (ADC1FilterResult[ADC1_RANK_5V] > VOLTAGE_5V_ADC_VALUE_MAX) ||
-            (ADC1FilterResult[ADC1_RANK_5V] < VOLTAGE_5V_ADC_VALUE_MIN) ) {
-        ModuleError.bits.vol5V = 1;
-    } else if ( (ADC1FilterResult[ADC1_RANK_5V] < (VOLTAGE_5V_ADC_VALUE_MAX - VOLTAGE_5V_ADC_VALUE_DIF)) &&
-                (ADC1FilterResult[ADC1_RANK_5V] > (VOLTAGE_5V_ADC_VALUE_MIN + VOLTAGE_5V_ADC_VALUE_DIF))  ) {
-        ModuleError.bits.vol5V = 0;
-    }
     // printData("ADC1FilterResult[ADC1_RANK_24V] = %d\n", ADC1FilterResult[ADC1_RANK_24V]);
-    // printData("ADC1FilterResult[ADC1_RANK_N12V] = %d\n", ADC1FilterResult[ADC1_RANK_N12V]);
 }
 
 void Adc_Handler(void)
 {
-    if (SYS_TIM_FLAG_10MS) {
+    if (SYS_TIM_FLAG_100MS) {
         HAL_ADC_Start_DMA(&hadc1, (uint32_t *)ADC1_DATA, ADC1_BUFFER_SIZE);
     }
 

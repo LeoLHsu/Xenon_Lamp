@@ -12,6 +12,7 @@ int16_t XenonLampCtrlCnt = 0;
 float XenonLampVol = 0.f;
 float XenonLampCurrSet = 0.f;
 float XenonLampCurr = 0.f;
+float XenonLampTemp = 0.f;
 
 uint32_t XenonLampWorkTimer_1s;
 uint32_t XenonLampWorkTimer_Min;
@@ -48,8 +49,9 @@ void Xenon_Lamp_Service(void)
     R_BRIGHTNESS_SET = 27;
 
     if (SYS_TIM_FLAG_100MS) {
-        XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOLTAGE] * 3.3 / 4095 * 101;
-        XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURRENT] * 3.3 / 4095 / 0.2;
+        XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
+        XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.2;
+        XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
 
         if (R_BRIGHTNESS_SET) {
             switch (XenonLampCtrlStep) {

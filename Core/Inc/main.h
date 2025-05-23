@@ -61,20 +61,16 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ADC_CH0_D24V_Pin GPIO_PIN_0
 #define ADC_CH0_D24V_GPIO_Port GPIOA
-#define ADC_CH2_LAMP_VOL_Pin GPIO_PIN_1
-#define ADC_CH2_LAMP_VOL_GPIO_Port GPIOA
-#define ADC_CH1_D12V_Pin GPIO_PIN_2
-#define ADC_CH1_D12V_GPIO_Port GPIOA
-#define ADC_CH4_TEMP_Pin GPIO_PIN_3
-#define ADC_CH4_TEMP_GPIO_Port GPIOA
+#define ADC_CH1_LAMP_VOL_Pin GPIO_PIN_1
+#define ADC_CH1_LAMP_VOL_GPIO_Port GPIOA
+#define ADC_CH2_TEMP_Pin GPIO_PIN_3
+#define ADC_CH2_TEMP_GPIO_Port GPIOA
 #define DAC_CH0_LAMP_SET_Pin GPIO_PIN_4
 #define DAC_CH0_LAMP_SET_GPIO_Port GPIOA
 #define ADC_CH3_LAMP_CURR_Pin GPIO_PIN_5
 #define ADC_CH3_LAMP_CURR_GPIO_Port GPIOA
-#define LAMP_IND_LED0_Pin GPIO_PIN_6
-#define LAMP_IND_LED0_GPIO_Port GPIOA
-#define LAMP_IND_LED1_Pin GPIO_PIN_7
-#define LAMP_IND_LED1_GPIO_Port GPIOA
+#define ADC_CH4_MOTOR_CURR_Pin GPIO_PIN_6
+#define ADC_CH4_MOTOR_CURR_GPIO_Port GPIOA
 #define LAMP_EN_Pin GPIO_PIN_0
 #define LAMP_EN_GPIO_Port GPIOB
 #define UART_DEBUG_TX_Pin GPIO_PIN_9
@@ -87,6 +83,10 @@ void Error_Handler(void);
 #define CAN_HOST_TX_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_15
 #define LED_GPIO_Port GPIOA
+#define LAMP_IND_LED0_Pin GPIO_PIN_5
+#define LAMP_IND_LED0_GPIO_Port GPIOB
+#define LAMP_IND_LED1_Pin GPIO_PIN_6
+#define LAMP_IND_LED1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

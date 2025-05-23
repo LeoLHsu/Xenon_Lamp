@@ -7,7 +7,7 @@
 #define XENON_LAMP_CURR_MAX                 (7.5)       // unit A
 
 #define XENON_LAMP_CONTROLER_CURR_MAX       (10)        // unit A
-#define XENON_LAMP_CONTROLER_DAC_MAX        (XENON_LAMP_CONTROLER_CURR_MAX * 0.2 / 2 * 3 / 3.3 * 4095)
+#define XENON_LAMP_CONTROLER_DAC_MAX        (XENON_LAMP_CONTROLER_CURR_MAX * 0.2 / 2 * 3 / ADC_DAC_VEF_VOL * 4095)
 #define XENON_LAMP_LIFE_IND_VOL             (20)        // unit V
 
 #define R_BRIGHTNESS_SET_MIN                (0)

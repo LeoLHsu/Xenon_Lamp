@@ -85,7 +85,7 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_14;
+    sConfig.Channel = ADC_CHANNEL_17;
     sConfig.Rank = ADC_REGULAR_RANK_2;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
@@ -93,7 +93,7 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_17;
+    sConfig.Channel = ADC_CHANNEL_15;
     sConfig.Rank = ADC_REGULAR_RANK_3;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
@@ -109,7 +109,7 @@ void MX_ADC1_Init(void)
 
     /** Configure Regular Channel
     */
-    sConfig.Channel = ADC_CHANNEL_15;
+    sConfig.Channel = ADC_CHANNEL_3;
     sConfig.Rank = ADC_REGULAR_RANK_5;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
@@ -136,12 +136,12 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
         /**ADC1 GPIO Configuration
         PA0     ------> ADC1_INP16
         PA1     ------> ADC1_INP17
-        PA2     ------> ADC1_INP14
         PA3     ------> ADC1_INP15
         PA5     ------> ADC1_INP19
+        PA6     ------> ADC1_INP3
         */
-        GPIO_InitStruct.Pin = ADC_CH0_D24V_Pin | ADC_CH2_LAMP_VOL_Pin | ADC_CH1_D12V_Pin | ADC_CH4_TEMP_Pin
-                              | ADC_CH3_LAMP_CURR_Pin;
+        GPIO_InitStruct.Pin = ADC_CH0_D24V_Pin | ADC_CH1_LAMP_VOL_Pin | ADC_CH2_TEMP_Pin | ADC_CH3_LAMP_CURR_Pin
+                              | ADC_CH4_MOTOR_CURR_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -183,12 +183,12 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
         /**ADC1 GPIO Configuration
         PA0     ------> ADC1_INP16
         PA1     ------> ADC1_INP17
-        PA2     ------> ADC1_INP14
         PA3     ------> ADC1_INP15
         PA5     ------> ADC1_INP19
+        PA6     ------> ADC1_INP3
         */
-        HAL_GPIO_DeInit(GPIOA, ADC_CH0_D24V_Pin | ADC_CH2_LAMP_VOL_Pin | ADC_CH1_D12V_Pin | ADC_CH4_TEMP_Pin
-                        | ADC_CH3_LAMP_CURR_Pin);
+        HAL_GPIO_DeInit(GPIOA, ADC_CH0_D24V_Pin | ADC_CH1_LAMP_VOL_Pin | ADC_CH2_TEMP_Pin | ADC_CH3_LAMP_CURR_Pin
+                        | ADC_CH4_MOTOR_CURR_Pin);
 
         /* ADC1 DMA DeInit */
         HAL_DMA_DeInit(adcHandle->DMA_Handle);

@@ -8,21 +8,20 @@ extern "C" {
 #include "main.h"
 #include "adc.h"
 
-#define VOLTAGE_24V_ADC_VALUE       (uint16_t)(2.182f / 3.3f * (1 << 12))       // 2708
+#define ADC_DAC_VEF_VOL             (3.0f)
+
+#define VOLTAGE_24V_ADC_VALUE       (uint16_t)(2.182f / ADC_DAC_VEF_VOL * (1 << 16))       // 47,666
 #define VOLTAGE_24V_ADC_VALUE_MAX   (uint16_t)(VOLTAGE_24V_ADC_VALUE * 1.1f)
 #define VOLTAGE_24V_ADC_VALUE_MIN   (uint16_t)(VOLTAGE_24V_ADC_VALUE * 0.9f)
 #define VOLTAGE_24V_ADC_VALUE_DIF   (uint16_t)((VOLTAGE_24V_ADC_VALUE_MAX - VOLTAGE_24V_ADC_VALUE_MIN) * 0.1f)
 
-#define VOLTAGE_5V_ADC_VALUE        (uint16_t)(2.5f / 3.3f * (1 << 12))         // 3103
-#define VOLTAGE_5V_ADC_VALUE_MAX    (uint16_t)(VOLTAGE_5V_ADC_VALUE * 1.1f)
-#define VOLTAGE_5V_ADC_VALUE_MIN    (uint16_t)(VOLTAGE_5V_ADC_VALUE * 0.9f)
-#define VOLTAGE_5V_ADC_VALUE_DIF    (uint16_t)((VOLTAGE_5V_ADC_VALUE_MAX - VOLTAGE_5V_ADC_VALUE_MIN) * 0.1f)
-
 typedef enum {
     ADC1_RANK_24V = 0,
-    ADC1_RANK_5V,
-    ADC1_RANK_LMAP_CURRENT,
-    ADC1_RANK_LMAP_VOLTAGE,
+    ADC1_RANK_LMAP_VOL,
+    ADC1_RANK_TEMP,
+    ADC1_RANK_LMAP_CURR,
+
+    ADC1_RANK_MOTOR_CURR,
     ADC1_RANK_MAX,
 } ADC1_Rank_t;
 
@@ -31,6 +30,8 @@ extern uint16_t ADC1FilterResult[ADC1_RANK_MAX];
 
 extern void Adc_Initial(void);
 extern void Adc_Handler(void);
+
+extern float Calculate_Temperature(uint16_t adcValue);
 
 #ifdef __cplusplus
 }
