@@ -262,10 +262,22 @@ void Debug_Handler(void)
             case 0x7F:
                 Debug_ResetFlag = 1;
                 break;
-            case 'a':
+            case '0':
                 R_BRIGHTNESS_SET = 0;
                 break;
-            case 'A':
+            case '1':
+                R_BRIGHTNESS_SET = 20;
+                break;
+            case '2':
+                R_BRIGHTNESS_SET = 40;
+                break;
+            case '3':
+                R_BRIGHTNESS_SET = 60;
+                break;
+            case '4':
+                R_BRIGHTNESS_SET = 80;
+                break;
+            case '5':
                 R_BRIGHTNESS_SET = 100;
                 break;
             default:

@@ -37,6 +37,7 @@ void Set_Xenon_Lamp_Curr(float newCurr)
 
 void Xenon_Lamp_Initial(void)
 {
+    R_BRIGHTNESS_SET = 0;
     R_LIGHT_RESET = 0;
     XenonLampWorkTimer_1s = 0;
     XenonLampWorkTimer_Min = UserSettingLampWorkTimerMin;
@@ -46,17 +47,15 @@ void Xenon_Lamp_Initial(void)
 
 void Xenon_Lamp_Service(void)
 {
-    R_BRIGHTNESS_SET = 27;
-
     if (SYS_TIM_FLAG_100MS) {
         XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
-        XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.2;
+        XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
         XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
 
         if (R_BRIGHTNESS_SET) {
             switch (XenonLampCtrlStep) {
                 case ESTABLISH_CURR:
-                    Set_Xenon_Lamp_Curr(XENON_LAMP_CONTROLER_CURR_MAX);
+                    Set_Xenon_Lamp_Curr(XENON_LAMP_CURR_MAX);
                     XenonLampCtrlStep = DRIVE_ENABLE;
                     break;
                 case DRIVE_ENABLE:
@@ -69,7 +68,7 @@ void Xenon_Lamp_Service(void)
                     if (XenonLampCtrlTimer) {
                         XenonLampCtrlTimer--;
                         if ((fabs(XenonLampVol) > 1e-6) && (XenonLampVol < XENON_LAMP_LIFE_IND_VOL) && \
-                                (fabs(XenonLampCurr - XENON_LAMP_CONTROLER_CURR_MAX) < (XENON_LAMP_CONTROLER_CURR_MAX * 10 / 100))) {
+                                (fabs(XenonLampCurr - XENON_LAMP_CURR_MAX) < (XENON_LAMP_CURR_MAX * 10 / 100))) {
                             if (++XenonLampCtrlCnt > 2) {
                                 XenonLampCtrlCnt = 0;
                                 XenonLampCtrlTimer = 0;
@@ -120,8 +119,9 @@ void Xenon_Lamp_Service(void)
 
             ModuleError.bits.lightDamage = 0;
         }
-
-        // printf("SP %d, %d, %.2f, %.2f\n", R_BRIGHTNESS_SET, XenonLampCtrlStep, XenonLampVol, XenonLampCurr);
+#ifdef XENON_PRINT
+        printf("SP %d, %d, %.2f, %.2f, %.2f\n", R_BRIGHTNESS_SET, XenonLampCtrlStep, XenonLampVol, XenonLampCurr, XenonLampTemp);
+#endif
     }
 
     if (SYS_TIM_FLAG_500MS) {
