@@ -73,6 +73,14 @@ void Error_Handler(void);
 #define ADC_CH4_MOTOR_CURR_GPIO_Port GPIOA
 #define LAMP_EN_Pin GPIO_PIN_0
 #define LAMP_EN_GPIO_Port GPIOB
+#define MOTOR_nFAULT_Pin GPIO_PIN_2
+#define MOTOR_nFAULT_GPIO_Port GPIOB
+#define MOTOR_nSLEEP_Pin GPIO_PIN_7
+#define MOTOR_nSLEEP_GPIO_Port GPIOE
+#define MOTOR_PH_Pin GPIO_PIN_8
+#define MOTOR_PH_GPIO_Port GPIOE
+#define MOTOR_EN_Pin GPIO_PIN_9
+#define MOTOR_EN_GPIO_Port GPIOE
 #define UART_DEBUG_TX_Pin GPIO_PIN_9
 #define UART_DEBUG_TX_GPIO_Port GPIOA
 #define UART_DEBUG_RX_Pin GPIO_PIN_10

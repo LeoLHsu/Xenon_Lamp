@@ -21,7 +21,7 @@ const uint8_t softwareTime[13] = "MMDDYYHHMMSS";
 
 uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
-    0xFFCC,
+    0xFF8C,
     0xFFFF,
     0xDFFF,
     0xFFFF,

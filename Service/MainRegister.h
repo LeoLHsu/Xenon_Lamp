@@ -53,6 +53,8 @@ Bit15:模块使能位
 #define R_LIGHT_WORK_HOUR   ModuleReg[0x03]      // R    h
 #define R_LIGHT_LIFE_HOUR   ModuleReg[0x04]      // R/W  h
 #define R_LIGHT_RESET       ModuleReg[0x05]      // R/W  0=关闭，1=启动
+#define R_LIGHT_FILTER_SET  ModuleReg[0x06]      // R/W  0=无滤光片，1=有滤光片
+#define R_LIGHT_FILTER_CURR ModuleReg[0x07]      // R    0=无滤光片，1=有滤光片
 #define R_ERROR_LIST_1      ModuleReg[0x2B]      // 错误列表1 R
 #define R_ERROR_LIST_2      ModuleReg[0x2C]      // 错误列表2 R
 #define R_FACTORY_CTRL_0    ModuleReg[0x2D]      // 工厂模式负载控制位  R/W

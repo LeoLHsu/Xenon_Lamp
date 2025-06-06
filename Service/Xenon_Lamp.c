@@ -3,7 +3,10 @@
 #include "Adc_Service.h"
 #include "dac.h"
 #include "UserPref.h"
+#include "drv8876.h"
 #include <math.h>
+
+uint8_t XenonLampFilterSetPre;
 
 Xenon_Ctrl_Step_t XenonLampCtrlStep = ESTABLISH_CURR;
 uint16_t XenonLampCtrlTimer = 0;
@@ -37,6 +40,10 @@ void Set_Xenon_Lamp_Curr(float newCurr)
 
 void Xenon_Lamp_Initial(void)
 {
+    R_LIGHT_FILTER_SET = 0;
+    R_LIGHT_FILTER_CURR = 0;
+    XenonLampFilterSetPre = 1;      // Reset
+
     R_BRIGHTNESS_SET = 0;
     R_LIGHT_RESET = 0;
     XenonLampWorkTimer_1s = 0;
@@ -48,6 +55,26 @@ void Xenon_Lamp_Initial(void)
 void Xenon_Lamp_Service(void)
 {
     if (SYS_TIM_FLAG_100MS) {
+        DRV8876_GetStatus();
+
+        if (motor_status.fault == 0) {
+            if (XenonLampFilterSetPre != R_LIGHT_FILTER_SET) {
+                XenonLampFilterSetPre = R_LIGHT_FILTER_SET;
+                if (XenonLampFilterSetPre) {
+                    DRV8876_SetStatus(MOTOR_FORWARD);
+                } else {
+                    DRV8876_SetStatus(MOTOR_REVERSE);
+                }
+            } else {
+                if (motor_status.current <= 1e-6) {
+                    DRV8876_SetStatus(MOTOR_STOP);
+                    R_LIGHT_FILTER_CURR = R_LIGHT_FILTER_SET;
+                }
+            }
+        } else {
+            DRV8876_SetStatus(MOTOR_STOP);
+        }
+
         XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
         XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
         XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);

@@ -31,6 +31,7 @@
 #include <string.h>
 #include "Can_Service.h"
 #include "UserPref.h"
+#include "drv8876.h"
 #include "Xenon_Lamp.h"
 /* USER CODE END Includes */
 
@@ -146,6 +147,7 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     EE_Read_Setting();
+    DRV8876_Init();
     Xenon_Lamp_Initial();
     while (1) {
         /* USER CODE END WHILE */
