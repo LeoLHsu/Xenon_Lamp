@@ -45,9 +45,7 @@ extern const uint16_t ModuleErrorList[];
 extern uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 
 #define R_ENABLE            ModuleReg[0x00]      // 0=关闭，1=启动  R/W
-/*
-Bit15:模块使能位
-*/
+#define XENON_LAMP_ENABLE   BIT(15)
 #define R_BRIGHTNESS_SET    ModuleReg[0x01]      // R/W  0 - 100%
 #define R_BRIGHTNESS_CURR   ModuleReg[0x02]      // R    0 - 100%
 #define R_LIGHT_WORK_HOUR   ModuleReg[0x03]      // R    h

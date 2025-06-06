@@ -40,6 +40,7 @@ void Set_Xenon_Lamp_Curr(float newCurr)
 
 void Xenon_Lamp_Initial(void)
 {
+    // SET_BIT(R_ENABLE, XENON_LAMP_ENABLE);
     R_LIGHT_FILTER_SET = 0;
     R_LIGHT_FILTER_CURR = 0;
     XenonLampFilterSetPre = 1;      // Reset
@@ -54,101 +55,119 @@ void Xenon_Lamp_Initial(void)
 
 void Xenon_Lamp_Service(void)
 {
-    if (SYS_TIM_FLAG_100MS) {
-        DRV8876_GetStatus();
+    if (__HAL_RCC_GET_PLL_OSCSOURCE() != RCC_PLLSOURCE_HSE) {
+        CLEAR_BIT(R_ENABLE, XENON_LAMP_ENABLE);
+        ModuleError.bits.externalOsc = 1;
+    } else {
+        ModuleError.bits.externalOsc = 0;
+    }
 
-        if (motor_status.fault == 0) {
-            if (XenonLampFilterSetPre != R_LIGHT_FILTER_SET) {
-                XenonLampFilterSetPre = R_LIGHT_FILTER_SET;
-                if (XenonLampFilterSetPre) {
-                    DRV8876_SetStatus(MOTOR_FORWARD);
+    if (READ_BIT(R_ENABLE, XENON_LAMP_ENABLE)) {
+        if (SYS_TIM_FLAG_100MS) {
+            DRV8876_GetStatus();
+
+            if (motor_status.fault == 0) {
+                if (XenonLampFilterSetPre != R_LIGHT_FILTER_SET) {
+                    XenonLampFilterSetPre = R_LIGHT_FILTER_SET;
+                    if (XenonLampFilterSetPre) {
+                        DRV8876_SetStatus(MOTOR_FORWARD);
+                    } else {
+                        DRV8876_SetStatus(MOTOR_REVERSE);
+                    }
                 } else {
-                    DRV8876_SetStatus(MOTOR_REVERSE);
+                    if (motor_status.current <= 1e-6) {
+                        DRV8876_SetStatus(MOTOR_STOP);
+                        R_LIGHT_FILTER_CURR = R_LIGHT_FILTER_SET;
+                    }
                 }
             } else {
-                if (motor_status.current <= 1e-6) {
-                    DRV8876_SetStatus(MOTOR_STOP);
-                    R_LIGHT_FILTER_CURR = R_LIGHT_FILTER_SET;
-                }
+                DRV8876_SetStatus(MOTOR_STOP);
             }
-        } else {
-            DRV8876_SetStatus(MOTOR_STOP);
-        }
 
-        XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
-        XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
-        XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
+            XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
+            XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
+            XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
 
-        if (R_BRIGHTNESS_SET) {
-            switch (XenonLampCtrlStep) {
-                case ESTABLISH_CURR:
-                    Set_Xenon_Lamp_Curr(XENON_LAMP_CURR_MAX);
-                    XenonLampCtrlStep = DRIVE_ENABLE;
-                    break;
-                case DRIVE_ENABLE:
-                    Set_Xenon_Lamp_Enable(ON);
-                    XenonLampCtrlTimer = 100;
-                    XenonLampCtrlCnt = 0;
-                    XenonLampCtrlStep = WAITING_LIGHT_UP;
-                    break;
-                case WAITING_LIGHT_UP:
-                    if (XenonLampCtrlTimer) {
-                        XenonLampCtrlTimer--;
-                        if ((fabs(XenonLampVol) > 1e-6) && (XenonLampVol < XENON_LAMP_LIFE_IND_VOL) && \
-                                (fabs(XenonLampCurr - XENON_LAMP_CURR_MAX) < (XENON_LAMP_CURR_MAX * 10 / 100))) {
-                            if (++XenonLampCtrlCnt > 2) {
+            if (R_BRIGHTNESS_SET) {
+                switch (XenonLampCtrlStep) {
+                    case ESTABLISH_CURR:
+                        Set_Xenon_Lamp_Curr(XENON_LAMP_CURR_MAX);
+                        XenonLampCtrlStep = DRIVE_ENABLE;
+                        break;
+                    case DRIVE_ENABLE:
+                        Set_Xenon_Lamp_Enable(ON);
+                        XenonLampCtrlTimer = 100;
+                        XenonLampCtrlCnt = 0;
+                        XenonLampCtrlStep = WAITING_LIGHT_UP;
+                        break;
+                    case WAITING_LIGHT_UP:
+                        if (XenonLampCtrlTimer) {
+                            XenonLampCtrlTimer--;
+                            if ((fabs(XenonLampVol) > 1e-6) && (XenonLampVol < XENON_LAMP_LIFE_IND_VOL) && \
+                                    (fabs(XenonLampCurr - XENON_LAMP_CURR_MAX) < (XENON_LAMP_CURR_MAX * 10 / 100))) {
+                                if (++XenonLampCtrlCnt > 2) {
+                                    XenonLampCtrlCnt = 0;
+                                    XenonLampCtrlTimer = 0;
+                                    XenonLampCtrlStep = DIMMING;
+                                }
+                            } else {
                                 XenonLampCtrlCnt = 0;
-                                XenonLampCtrlTimer = 0;
-                                XenonLampCtrlStep = DIMMING;
                             }
                         } else {
-                            XenonLampCtrlCnt = 0;
+                            XenonLampCtrlStep = TURN_ON_FAILED;
+                            ModuleError.bits.lightDamage = 1;
                         }
-                    } else {
-                        XenonLampCtrlStep = TURN_ON_FAILED;
-                        ModuleError.bits.lightDamage = 1;
-                    }
-                    break;
-                case DIMMING:
-                    Set_Xenon_Lamp_Curr((float)R_BRIGHTNESS_SET / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
-                    if (XenonLampVol > XENON_LAMP_LIFE_IND_VOL) {
-                        if (XenonLampCtrlCnt < 0) {
-                            XenonLampCtrlCnt = 0;
+                        break;
+                    case DIMMING:
+                        Set_Xenon_Lamp_Curr((float)R_BRIGHTNESS_SET / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
+                        if (XenonLampVol > XENON_LAMP_LIFE_IND_VOL) {
+                            if (XenonLampCtrlCnt < 0) {
+                                XenonLampCtrlCnt = 0;
+                            }
+                            if (++XenonLampCtrlCnt > 100) {
+                                XenonLampCtrlCnt = 100;
+                                ModuleError.bits.lightHardwareLife = 1;
+                            }
+                        } else {
+                            if (XenonLampCtrlCnt > 0) {
+                                XenonLampCtrlCnt = 0;
+                            }
+                            if (--XenonLampCtrlCnt < -100) {
+                                XenonLampCtrlCnt = -100;
+                                ModuleError.bits.lightHardwareLife = 0;
+                            }
                         }
-                        if (++XenonLampCtrlCnt > 100) {
-                            XenonLampCtrlCnt = 100;
-                            ModuleError.bits.lightHardwareLife = 1;
-                        }
-                    } else {
-                        if (XenonLampCtrlCnt > 0) {
-                            XenonLampCtrlCnt = 0;
-                        }
-                        if (--XenonLampCtrlCnt < -100) {
-                            XenonLampCtrlCnt = -100;
-                            ModuleError.bits.lightHardwareLife = 0;
-                        }
-                    }
-                    break;
-                case TURN_ON_FAILED:
-                    R_BRIGHTNESS_SET = 0;
-                    Set_Xenon_Lamp_Enable(OFF);
-                    Set_Xenon_Lamp_Curr(0);
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            XenonLampCtrlStep = ESTABLISH_CURR;
-            XenonLampCtrlTimer = 0;
-            XenonLampCtrlCnt = 0;
-            Set_Xenon_Lamp_Enable(OFF);
-            Set_Xenon_Lamp_Curr(0);
+                        break;
+                    case TURN_ON_FAILED:
+                        R_BRIGHTNESS_SET = 0;
+                        Set_Xenon_Lamp_Enable(OFF);
+                        Set_Xenon_Lamp_Curr(0);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                XenonLampCtrlStep = ESTABLISH_CURR;
+                XenonLampCtrlTimer = 0;
+                XenonLampCtrlCnt = 0;
+                Set_Xenon_Lamp_Enable(OFF);
+                Set_Xenon_Lamp_Curr(0);
 
-            ModuleError.bits.lightDamage = 0;
-        }
+                ModuleError.bits.lightDamage = 0;
+            }
 #ifdef XENON_PRINT
-        printf("SP %d, %d, %.2f, %.2f, %.2f\n", R_BRIGHTNESS_SET, XenonLampCtrlStep, XenonLampVol, XenonLampCurr, XenonLampTemp);
+            printf("SP %d, %d, %.2f, %.2f, %.2f\n", R_BRIGHTNESS_SET, XenonLampCtrlStep, XenonLampVol, XenonLampCurr, XenonLampTemp);
 #endif
+        }
+    } else {
+        DRV8876_SetStatus(MOTOR_STOP);
+        R_LIGHT_FILTER_SET = XenonLampFilterSetPre;
+        R_LIGHT_FILTER_CURR = XenonLampFilterSetPre;
+
+        Set_Xenon_Lamp_Enable(OFF);
+        Set_Xenon_Lamp_Curr(0);
+        R_BRIGHTNESS_SET = 0;
+        R_BRIGHTNESS_CURR = 0;
     }
 
     if (SYS_TIM_FLAG_500MS) {
