@@ -3,6 +3,57 @@
 uint8_t canTxData[CAN_DATA_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 uint8_t canRxData[CAN_DATA_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 FDCAN_RxHeaderTypeDef canRxHeader;
+static uint16_t busOffCount = 0;
+
+/**
+***********************************************************
+* @brief 复位CAN控制器函数（退出Bus-Off状态）
+* @param
+* @return
+***********************************************************
+*/
+void CAN_Reset(FDCAN_HandleTypeDef *hfdcan)
+{
+    // 进入初始化模式
+    SET_BIT(hfdcan->Instance->CCCR, FDCAN_CCCR_INIT);
+    while (!(hfdcan->Instance->CCCR & FDCAN_CCCR_INIT));
+
+    // 清零错误计数器
+    hfdcan->Instance->ECR = 0;  // 清除TEC和REC
+
+    // 退出初始化模式
+    CLEAR_BIT(hfdcan->Instance->CCCR, FDCAN_CCCR_INIT);
+    while (hfdcan->Instance->CCCR & FDCAN_CCCR_INIT);
+}
+
+/**
+***********************************************************
+* @brief CAN 错误处理函数
+* @param hfdcan
+* @return
+***********************************************************
+*/
+void CAN_Errors_Service(FDCAN_HandleTypeDef *hfdcan)
+{
+    uint32_t psr = hfdcan->Instance->PSR;
+
+    if (psr & FDCAN_PSR_BO_Msk) {   // Bus-Off
+        busOffCount++;
+        CAN_Reset(hfdcan);          // 复位can, 退出bus-off
+    }
+}
+
+/**
+***********************************************************
+* @brief 获取Bus-Off错误次数
+* @param
+* @return busOffCount 出现busOff的次数
+***********************************************************
+*/
+uint16_t Get_BusOff_Count(void)
+{
+    return busOffCount;
+}
 
 void CAN_Filter_Config(void)
 {
@@ -188,6 +239,7 @@ void CAN_Handler(void)
         CAN_ParseMessage(canRxData, rxLenth);
     }
 
+    CAN_Errors_Service(&HOST_CAN_HANDLE);
     Can_Error_Service();
 }
 

@@ -1,5 +1,6 @@
 #include "Debug.h"
 #include "MainRegister.h"
+#include "Can_Service.h"
 
 #ifdef DEBUG
 
@@ -250,6 +251,7 @@ void Debug_Handler(void)
     if (SYS_TIM_FLAG_1000MS) {
         printData("Second %d\n", (int)SystemTimeBase_Second);
         printMsg("\n");
+        printData("BusOffCount = %d\n", Get_BusOff_Count());
     }
 
 #ifdef USE_DEBUG_RECEIVE

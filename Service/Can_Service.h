@@ -27,6 +27,8 @@ extern uint8_t CAN_ReadData(uint8_t *buf);
 
 extern void CAN_Initial(void);
 extern void CAN_Handler(void);
+extern void CAN_Errors_Service(FDCAN_HandleTypeDef *hfdcan);
+extern uint16_t Get_BusOff_Count(void);
 
 #endif
 
