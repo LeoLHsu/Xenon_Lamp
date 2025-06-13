@@ -4,14 +4,14 @@
 
 Module_Error_Union_t ModuleError;
 const uint16_t ModuleErrorList[ERROR_MAX] = {
-    (GENERAL << 12) | ERROR_VOLTAGE_24V,
-    (GENERAL << 12) | ERROR_VOLTAGE_5V,
-    (ADVISE << 12) | ERROR_BRIGHTNESS_SETTING,
-    (SERIOUS << 12) | ERROR_LIGHT_LIFE,
+    (CYCLE << 15)   | (GENERAL << 12)   | ERROR_VOLTAGE_24V,
+    (CYCLE << 15)   | (GENERAL << 12)   | ERROR_VOLTAGE_5V,
+    (ONCE << 15)    | (ADVISE << 12)    | ERROR_BRIGHTNESS_SETTING,
+    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_LIFE,
 
-    (SERIOUS << 12) | ERROR_LIGHT_HAREWARE_LIFE,
-    (FATAL << 12) | ERROR_LIGHT_DAMAGE_LIFE,
-    (FATAL << 12) | ERROR_EXTERNAL_OSC,
+    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_HAREWARE_LIFE,
+    (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_DAMAGE_LIFE,
+    (CYCLE << 15)   | (FATAL << 12)     | ERROR_EXTERNAL_OSC,
 };
 
 const uint8_t serialNum[11] = "YYMMDDSSSS";
@@ -23,7 +23,7 @@ uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
     0xFF8C,
     0xFFFF,
-    0xDFFF,
+    0xDBFF,
     0xFFFF,
 };
 

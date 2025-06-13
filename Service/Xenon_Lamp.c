@@ -51,6 +51,7 @@ void Xenon_Lamp_Initial(void)
     XenonLampWorkTimer_Min = UserSettingLampWorkTimerMin;
     R_LIGHT_WORK_HOUR = UserSettingLampWorkTimerMin / 60;
     R_LIGHT_LIFE_HOUR = UserSettingLampLifeTimeHr;
+    R_ERROR_REPORT_TIMEBASE = 30;
 }
 
 void Xenon_Lamp_Service(void)

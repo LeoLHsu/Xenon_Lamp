@@ -215,19 +215,35 @@ uint8_t CAN_ParseMessage(uint8_t *pData, uint8_t len)
 
 void Can_Error_Service(void)
 {
-    static Module_Error_Union_t Error_Temp = {0};
     uint8_t i = 0;
+    static uint8_t cycleReportTimer_1s[32] = {0};
 
-    if (Error_Temp.flg != ModuleError.flg) {
-        for (i = 0; i < 32; i++) {
-            if (((Error_Temp.flg >> i) & 0x0001) != ((ModuleError.flg >> i) & 0x0001)) {
-                if (((ModuleError.flg >> i) & 0x0001)) {
-                    R_ERROR_INFO = ModuleErrorList[i];
-                    CAN_Response_ReadReg(CAN_SLAVE_ID, R_ERROR_INFO_ADDR, 1);
+    for (i = 0; i < 32; i++) {
+        if ((ModuleError.flg >> i) & 0x0001) {
+            if (cycleReportTimer_1s[i] == 0) {
+                R_ERROR_INFO = ModuleErrorList[i] & 0x7FFF;     // Removed the report type
+                CAN_Response_ReadReg(CAN_SLAVE_ID, R_ERROR_INFO_ADDR, 1);
+                cycleReportTimer_1s[i] = 1;
+            }
+
+            if (SYS_TIM_FLAG_1000MS) {
+                if ((ModuleErrorList[i] & 0x8000) == 0) {       // Checked the report type
+                    cycleReportTimer_1s[i] = 1;
+                } else {
+                    if (R_ERROR_REPORT_TIMEBASE < 30) {         // Minimum 30, maximum 120
+                        R_ERROR_REPORT_TIMEBASE = 30;
+                    } else if (R_ERROR_REPORT_TIMEBASE > 120) {
+                        R_ERROR_REPORT_TIMEBASE = 120;
+                    }
+                    if (++cycleReportTimer_1s[i] > \
+                            (ERROR_LEVEL_MAX - ((ModuleErrorList[i] & 0x7000) >> 12)) * R_ERROR_REPORT_TIMEBASE) {
+                        cycleReportTimer_1s[i] = 0;
+                    }
                 }
             }
+        } else {
+            cycleReportTimer_1s[i] = 0;
         }
-        Error_Temp.flg = ModuleError.flg;
     }
 }
 
