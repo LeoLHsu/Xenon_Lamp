@@ -7,10 +7,16 @@ const uint16_t ModuleErrorList[ERROR_MAX] = {
     (CYCLE << 15)   | (GENERAL << 12)   | ERROR_VOLTAGE_24V,
     (CYCLE << 15)   | (GENERAL << 12)   | ERROR_VOLTAGE_5V,
     (ONCE << 15)    | (ADVISE << 12)    | ERROR_BRIGHTNESS_SETTING,
-    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_LIFE,
+    (ONCE << 15)    | (ADVISE << 12)    | ERROR_FILTER_SETTING,
 
+    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_LIFE,
+    (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_LIFE_SHOTDOWN,
     (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_HAREWARE_LIFE,
-    (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_DAMAGE_LIFE,
+    (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_DAMAGE,
+
+    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_TEMP,
+    (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_TEMP_SHOTDOWN,
+    (ONCE << 15)    | (SERIOUS << 12)   | ERROR_FILTER_MOTOR,
     (CYCLE << 15)   | (FATAL << 12)     | ERROR_EXTERNAL_OSC,
 };
 
@@ -66,6 +72,13 @@ uint16_t WriteMainReg(uint16_t addr, uint16_t val)
                     ModuleError.bits.brightnessSeting = 1;
                 } else {
                     ModuleError.bits.brightnessSeting = 0;
+                    ModuleReg[index] = val;
+                }
+            } else if (&ModuleReg[index] == &R_LIGHT_FILTER_SET) {
+                if (val > R_FILTER_SET_MAX) {
+                    ModuleError.bits.filterSeting = 1;
+                } else {
+                    ModuleError.bits.filterSeting = 0;
                     ModuleReg[index] = val;
                 }
             } else {

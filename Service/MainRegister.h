@@ -23,10 +23,16 @@ typedef union {
         uint32_t vol24V: 1;
         uint32_t vol5V: 1;
         uint32_t brightnessSeting: 1;
-        uint32_t lightLife: 1;
+        uint32_t filterSeting: 1;
 
+        uint32_t lightLife: 1;
+        uint32_t lightLifeShotdown: 1;
         uint32_t lightHardwareLife: 1;
         uint32_t lightDamage: 1;
+
+        uint32_t lightTemp: 1;
+        uint32_t lightTempShotdown: 1;
+        uint32_t filterMotor: 1;
         uint32_t externalOsc: 1;
     } bits;
 } Module_Error_Union_t;
@@ -36,11 +42,18 @@ typedef enum {
     ERROR_VOLTAGE_24V = 0,
     ERROR_VOLTAGE_5V,
     ERROR_BRIGHTNESS_SETTING,
-    ERROR_LIGHT_LIFE,
+    ERROR_FILTER_SETTING,
 
+    ERROR_LIGHT_LIFE,
+    ERROR_LIGHT_LIFE_SHOTDOWN,
     ERROR_LIGHT_HAREWARE_LIFE,
-    ERROR_LIGHT_DAMAGE_LIFE,
+    ERROR_LIGHT_DAMAGE,
+
+    ERROR_LIGHT_TEMP,
+    ERROR_LIGHT_TEMP_SHOTDOWN,
+    ERROR_FILTER_MOTOR,
     ERROR_EXTERNAL_OSC,
+
     ERROR_MAX
 } Module_Error_t;
 extern const uint16_t ModuleErrorList[];
@@ -56,7 +69,7 @@ extern uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 #define R_BRIGHTNESS_CURR           ModuleReg[0x02]      // R    0 - 100%
 #define R_LIGHT_WORK_HOUR           ModuleReg[0x03]      // R    h
 #define R_LIGHT_LIFE_HOUR           ModuleReg[0x04]      // R/W  h
-#define R_LIGHT_RESET               ModuleReg[0x05]      // R/W  0=关闭，1=启动
+#define R_LIGHT_WORK_HOUR_RESET     ModuleReg[0x05]      // R/W  0=关闭，1=启动
 #define R_LIGHT_FILTER_SET          ModuleReg[0x06]      // R/W  0=无滤光片，1=有滤光片
 #define R_LIGHT_FILTER_CURR         ModuleReg[0x07]      // R    0=无滤光片，1=有滤光片
 #define R_ERROR_REPORT_TIMEBASE     ModuleReg[0x2A]      // R/W  错误周期上报时间基数 秒

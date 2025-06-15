@@ -12,13 +12,21 @@
 
 #define R_BRIGHTNESS_SET_MIN                (0)
 #define R_BRIGHTNESS_SET_MAX                (100)
+#define R_FILTER_SET_MIN                    (0)
+#define R_FILTER_SET_MAX                    (1)
+
+#define XENON_LAMP_SHOTDOWN_TMEP            (100)       // unit Celsius
+#define XENON_LAMP_ERROR_TMEP               (80)        // unit Celsius
+#define XENON_LAMP_SHOTDOWN_LIFE_FACTOR     (0.8f)
 
 typedef enum {
     ESTABLISH_CURR = 0,
     DRIVE_ENABLE,
     WAITING_LIGHT_UP,
     DIMMING,
-    TURN_ON_FAILED
+    TURN_ON_FAILED,
+    SHOTDOWN,
+    XENON_CTRL_STEP_MAX
 } Xenon_Ctrl_Step_t;
 
 extern uint32_t XenonLampWorkTimer_1s;

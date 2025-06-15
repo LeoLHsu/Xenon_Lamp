@@ -46,7 +46,7 @@ void Xenon_Lamp_Initial(void)
     XenonLampFilterSetPre = 1;      // Reset
 
     R_BRIGHTNESS_SET = 0;
-    R_LIGHT_RESET = 0;
+    R_LIGHT_WORK_HOUR_RESET = 0;
     XenonLampWorkTimer_1s = 0;
     XenonLampWorkTimer_Min = UserSettingLampWorkTimerMin;
     R_LIGHT_WORK_HOUR = UserSettingLampWorkTimerMin / 60;
@@ -66,6 +66,7 @@ void Xenon_Lamp_Service(void)
     if (READ_BIT(R_ENABLE, XENON_LAMP_ENABLE)) {
         if (SYS_TIM_FLAG_100MS) {
             DRV8876_GetStatus();
+            ModuleError.bits.filterMotor = !!motor_status.fault;
 
             if (motor_status.fault == 0) {
                 if (XenonLampFilterSetPre != R_LIGHT_FILTER_SET) {
@@ -88,6 +89,33 @@ void Xenon_Lamp_Service(void)
             XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
             XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
             XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
+            if (XenonLampTemp >= XENON_LAMP_SHOTDOWN_TMEP) {
+                ModuleError.bits.lightTemp = 0;
+                ModuleError.bits.lightTempShotdown = 1;
+            } else if (XenonLampTemp >= XENON_LAMP_ERROR_TMEP) {
+                ModuleError.bits.lightTemp = 1;
+                ModuleError.bits.lightTempShotdown = 0;
+            } else {
+                ModuleError.bits.lightTemp = 0;
+                ModuleError.bits.lightTempShotdown = 0;
+            }
+            if (R_LIGHT_WORK_HOUR >= R_LIGHT_LIFE_HOUR) {
+                ModuleError.bits.lightLife = 0;
+                ModuleError.bits.lightLifeShotdown = 1;
+            } else if (R_LIGHT_WORK_HOUR >= (uint16_t)(R_LIGHT_LIFE_HOUR * XENON_LAMP_SHOTDOWN_LIFE_FACTOR)) {
+                ModuleError.bits.lightLife = 1;
+                ModuleError.bits.lightLifeShotdown = 0;
+            } else {
+                ModuleError.bits.lightLife = 0;
+                ModuleError.bits.lightLifeShotdown = 0;
+            }
+            if (ModuleError.bits.lightTempShotdown || ModuleError.bits.lightLifeShotdown) {
+                XenonLampCtrlStep = SHOTDOWN;
+            } else {
+                if (XenonLampCtrlStep == SHOTDOWN) {
+                    XenonLampCtrlStep = ESTABLISH_CURR;
+                }
+            }
 
             if (R_BRIGHTNESS_SET) {
                 switch (XenonLampCtrlStep) {
@@ -140,6 +168,7 @@ void Xenon_Lamp_Service(void)
                         }
                         break;
                     case TURN_ON_FAILED:
+                    case SHOTDOWN:
                         R_BRIGHTNESS_SET = 0;
                         Set_Xenon_Lamp_Enable(OFF);
                         Set_Xenon_Lamp_Curr(0);
@@ -148,7 +177,9 @@ void Xenon_Lamp_Service(void)
                         break;
                 }
             } else {
-                XenonLampCtrlStep = ESTABLISH_CURR;
+                if (XenonLampCtrlStep != SHOTDOWN) {
+                    XenonLampCtrlStep = ESTABLISH_CURR;
+                }
                 XenonLampCtrlTimer = 0;
                 XenonLampCtrlCnt = 0;
                 Set_Xenon_Lamp_Enable(OFF);
@@ -176,24 +207,20 @@ void Xenon_Lamp_Service(void)
     }
 
     if (SYS_TIM_FLAG_1000MS) {
-        if (R_LIGHT_RESET) {
-            R_LIGHT_RESET = 0;
+        if (R_LIGHT_WORK_HOUR_RESET) {
+            R_LIGHT_WORK_HOUR_RESET = 0;
             XenonLampWorkTimer_1s = 0;
             XenonLampWorkTimer_Min = 0;
+            R_LIGHT_WORK_HOUR = 0;
         } else {
             if (R_BRIGHTNESS_SET != 0) {
                 INC_PARA_U32(XenonLampWorkTimer_1s);
                 if (XenonLampWorkTimer_1s >= 60) {
                     XenonLampWorkTimer_1s = 0;
                     INC_PARA_U32(XenonLampWorkTimer_Min);
+                    R_LIGHT_WORK_HOUR = XenonLampWorkTimer_Min / 60;
                 }
             }
-        }
-        R_LIGHT_WORK_HOUR = XenonLampWorkTimer_Min / 60;
-        if (R_LIGHT_WORK_HOUR >= R_LIGHT_LIFE_HOUR) {
-            ModuleError.bits.lightLife = 1;
-        } else {
-            ModuleError.bits.lightLife = 0;
         }
     }
 }
