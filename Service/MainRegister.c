@@ -20,11 +20,6 @@ const uint16_t ModuleErrorList[ERROR_MAX] = {
     (CYCLE << 15)   | (FATAL << 12)     | ERROR_EXTERNAL_OSC,
 };
 
-const uint8_t serialNum[11] = "YYMMDDSSSS";
-const uint8_t hardwareVer[3] = "HV";
-const uint8_t softwareVer[3] = "SV";
-const uint8_t softwareTime[13] = "MMDDYYHHMMSS";
-
 uint16_t ModuleReg[MODULE_REG_NUM_MAX];
 const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
     0xFF8C,
@@ -36,10 +31,11 @@ const uint16_t moduleRegReadOnlyBit[MODULE_REG_NUM_MAX >> 4] = {
 void MainReg_Initial(void)
 {
     memset(ModuleReg, 0x00, sizeof(ModuleReg));
-    memcpy(R_SERIAL_NUM_PTR, serialNum, 10);
-    memcpy(R_HARDWARE_VER_PTR, hardwareVer, 2);
-    memcpy(R_SOFTWARE_VER_PTR, softwareVer, 2);
-    memcpy(R_SOFTWARE_TIME_PTR, softwareTime, 12);
+    memcpy(R_SERIAL_NUM_PTR, SERIAL_NUM, 10);
+    memcpy(R_HARDWARE_VER_PTR, HARDWARE_VER, 2);
+    memcpy(R_SOFTWARE_VER_PTR, SOFTWARE_VER, 2);
+    memcpy(R_SOFTWARE_TIME_PTR, SOFTWARE_TIME, 12);
+    R_SOFTWARE_INDISE_VER_PTR = SOFTWARE_INSIDE_VER;
     ModuleError.flg = 0;
 }
 

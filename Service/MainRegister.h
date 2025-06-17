@@ -2,6 +2,22 @@
 #define MAINREGISTER_H_
 #include "main.h"
 
+#define SERIAL_NUM                  "YYMMDDSSSS"
+#define HARDWARE_VER                "HV"
+#define SOFTWARE_VER                "SV"
+#define SOFTWARE_TIME               "MMDDYYHHMMSS"
+#ifdef DEBUG
+#define SOFTWARE_INSIDE_VER         (0U)
+#else
+#define SOFTWARE_INSIDE_VER         (10000U)        // xxxxx stands for Vx.xx.xx
+#endif
+
+_Static_assert(sizeof(SERIAL_NUM) - 1 == 10, "SERIAL_NUM must be 10 characters long");
+_Static_assert(sizeof(HARDWARE_VER) - 1 == 2, "HARDWARE_VER must be 2 characters long");
+_Static_assert(sizeof(SOFTWARE_VER) - 1 == 2, "SOFTWARE_VER must be 2 characters long");
+_Static_assert(sizeof(SOFTWARE_TIME) - 1 == 12, "SOFTWARE_TIME must be 12 characters long");
+_Static_assert(SOFTWARE_INSIDE_VER <= U16_DUMMY, "SOFTWARE_INSIDE_VER must fit in uint16_t");
+
 typedef enum {
     ONCE = 0,
     CYCLE
@@ -88,6 +104,7 @@ Bit15:0-Clean; 1-Write
 #define R_HARDWARE_VER_PTR          &ModuleReg[0x35]        // Hardware Version   R lenth == 2 Bytes
 #define R_SOFTWARE_VER_PTR          &ModuleReg[0x36]        // Software Version   R lenth == 2 Bytes
 #define R_SOFTWARE_TIME_PTR         &ModuleReg[0x37]        // Software Version   R lenth == 12 Bytes
+#define R_SOFTWARE_INDISE_VER_PTR   ModuleReg[0x3D]         // Software inside Version   R lenth == 2 Bytes
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
