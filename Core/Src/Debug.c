@@ -1,6 +1,7 @@
 #include "Debug.h"
 #include "MainRegister.h"
 #include "Can_Service.h"
+#include "Xenon_Lamp.h"
 
 #ifdef DEBUG
 
@@ -250,8 +251,21 @@ void Debug_Handler(void)
 
     if (SYS_TIM_FLAG_1000MS) {
         printData("Second %d\n", (int)SystemTimeBase_Second);
-        printMsg("\n");
         printData("BusOffCount = %d\n", Get_BusOff_Count());
+        printData("R_ENABLE = 0x%X\n", R_ENABLE);
+        printData("R_BRIGHTNESS_SET = %d\n", R_BRIGHTNESS_SET);
+        printData("R_BRIGHTNESS_CURR = %d\n", R_BRIGHTNESS_CURR);
+        printData("R_LIGHT_WORK_HOUR = %d\n", R_LIGHT_WORK_HOUR);
+        printData("R_LIGHT_LIFE_HOUR = %d\n", R_LIGHT_LIFE_HOUR);
+        printData("R_LIGHT_FILTER_SET = %d\n", R_LIGHT_FILTER_SET);
+        printData("R_LIGHT_FILTER_CURR = %d\n", R_LIGHT_FILTER_CURR);
+        printData("XenonLampCtrlStep = %d\n", XenonLampCtrlStep);
+        printData("XenonLampCurrSet = %.3f\n", XenonLampCurrSet);
+        printData("XenonLampVol = %.3f\n", XenonLampVol);
+        printData("XenonLampCurr = %.3f\n", XenonLampCurr);
+        printData("XenonLampTemp = %.3f\n", XenonLampTemp);
+        printData("ModuleError.flg = 0x%lX\n", ModuleError.flg);
+        printMsg("\n");
     }
 
 #ifdef USE_DEBUG_RECEIVE

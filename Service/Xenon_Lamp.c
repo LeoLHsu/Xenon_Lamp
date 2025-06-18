@@ -4,8 +4,10 @@
 #include "dac.h"
 #include "UserPref.h"
 #include "drv8876.h"
+#include <stdlib.h>
 #include <math.h>
 
+uint8_t XenonLampFilterReset;
 uint8_t XenonLampFilterSetPre;
 
 Xenon_Ctrl_Step_t XenonLampCtrlStep = ESTABLISH_CURR;
@@ -41,9 +43,9 @@ void Set_Xenon_Lamp_Curr(float newCurr)
 void Xenon_Lamp_Initial(void)
 {
     // SET_BIT(R_ENABLE, XENON_LAMP_ENABLE);
-    R_LIGHT_FILTER_SET = 0;
+    R_LIGHT_FILTER_SET = XenonLampFilterSetPre = 0;
     R_LIGHT_FILTER_CURR = 0;
-    XenonLampFilterSetPre = 1;      // Reset
+    XenonLampFilterReset = 1;
 
     R_BRIGHTNESS_SET = 0;
     R_LIGHT_WORK_HOUR_RESET = 0;
@@ -56,6 +58,8 @@ void Xenon_Lamp_Initial(void)
 
 void Xenon_Lamp_Service(void)
 {
+    static uint16_t brightnessSet_Pre = 0;
+
     if (__HAL_RCC_GET_PLL_OSCSOURCE() != RCC_PLLSOURCE_HSE) {
         CLEAR_BIT(R_ENABLE, XENON_LAMP_ENABLE);
         ModuleError.bits.externalOsc = 1;
@@ -69,6 +73,12 @@ void Xenon_Lamp_Service(void)
             ModuleError.bits.filterMotor = !!motor_status.fault;
 
             if (motor_status.fault == 0) {
+                if (XenonLampFilterReset) {
+                    R_LIGHT_FILTER_SET = 0;
+                    R_LIGHT_FILTER_CURR = 0;
+                    XenonLampFilterSetPre = 1;
+                    XenonLampFilterReset = 0;
+                }
                 if (XenonLampFilterSetPre != R_LIGHT_FILTER_SET) {
                     XenonLampFilterSetPre = R_LIGHT_FILTER_SET;
                     if (XenonLampFilterSetPre) {
@@ -122,6 +132,7 @@ void Xenon_Lamp_Service(void)
                     case ESTABLISH_CURR:
                         Set_Xenon_Lamp_Curr(XENON_LAMP_CURR_MAX);
                         XenonLampCtrlStep = DRIVE_ENABLE;
+                        brightnessSet_Pre = 100;
                         break;
                     case DRIVE_ENABLE:
                         Set_Xenon_Lamp_Enable(ON);
@@ -148,7 +159,16 @@ void Xenon_Lamp_Service(void)
                         }
                         break;
                     case DIMMING:
-                        Set_Xenon_Lamp_Curr((float)R_BRIGHTNESS_SET / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
+                        if (abs(brightnessSet_Pre - R_BRIGHTNESS_SET) > 5) {
+                            if (brightnessSet_Pre > R_BRIGHTNESS_SET) {
+                                brightnessSet_Pre -= 5;
+                            } else {
+                                brightnessSet_Pre += 5;
+                            }
+                        } else {
+                            brightnessSet_Pre = R_BRIGHTNESS_SET;
+                        }
+                        Set_Xenon_Lamp_Curr((float)brightnessSet_Pre / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
                         if (XenonLampVol > XENON_LAMP_LIFE_IND_VOL) {
                             if (XenonLampCtrlCnt < 0) {
                                 XenonLampCtrlCnt = 0;
@@ -189,6 +209,7 @@ void Xenon_Lamp_Service(void)
             }
 #ifdef XENON_PRINT
             printf("SP %d, %d, %.2f, %.2f, %.2f\n", R_BRIGHTNESS_SET, XenonLampCtrlStep, XenonLampVol, XenonLampCurr, XenonLampTemp);
+            // printf("SP %d, %d, %d, %.2f\n", motor_status.enabled, motor_status.direction, motor_status.fault, motor_status.current);
 #endif
         }
     } else {

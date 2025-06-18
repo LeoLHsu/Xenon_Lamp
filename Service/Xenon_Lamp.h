@@ -29,6 +29,11 @@ typedef enum {
     XENON_CTRL_STEP_MAX
 } Xenon_Ctrl_Step_t;
 
+extern Xenon_Ctrl_Step_t XenonLampCtrlStep;
+extern float XenonLampVol;
+extern float XenonLampCurrSet;
+extern float XenonLampCurr;
+extern float XenonLampTemp;
 extern uint32_t XenonLampWorkTimer_1s;
 extern uint32_t XenonLampWorkTimer_Min;
 

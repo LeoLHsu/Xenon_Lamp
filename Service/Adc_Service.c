@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define FILTER_LOG_TWO  (6)
+#define FILTER_LOG_TWO  (2)
 #define FILTER_CNT      (0x01 << FILTER_LOG_TWO)
 
 uint8_t ADC1FirstOrderFilterArrayPos;
