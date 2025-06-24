@@ -159,11 +159,11 @@ void Xenon_Lamp_Service(void)
                         }
                         break;
                     case DIMMING:
-                        if (abs(brightnessSet_Pre - R_BRIGHTNESS_SET) > 5) {
+                        if (abs(brightnessSet_Pre - R_BRIGHTNESS_SET) > 2) {
                             if (brightnessSet_Pre > R_BRIGHTNESS_SET) {
-                                brightnessSet_Pre -= 5;
+                                brightnessSet_Pre -= 2;
                             } else {
-                                brightnessSet_Pre += 5;
+                                brightnessSet_Pre += 2;
                             }
                         } else {
                             brightnessSet_Pre = R_BRIGHTNESS_SET;
