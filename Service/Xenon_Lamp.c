@@ -200,8 +200,6 @@ void Xenon_Lamp_Service(void)
                 if (XenonLampCtrlStep != SHOTDOWN) {
                     XenonLampCtrlStep = ESTABLISH_CURR;
                 }
-                XenonLampCtrlTimer = 0;
-                XenonLampCtrlCnt = 0;
                 Set_Xenon_Lamp_Enable(OFF);
                 Set_Xenon_Lamp_Curr(0);
 
@@ -217,6 +215,9 @@ void Xenon_Lamp_Service(void)
         R_LIGHT_FILTER_SET = XenonLampFilterSetPre;
         R_LIGHT_FILTER_CURR = XenonLampFilterSetPre;
 
+        if (XenonLampCtrlStep != SHOTDOWN) {
+            XenonLampCtrlStep = ESTABLISH_CURR;
+        }
         Set_Xenon_Lamp_Enable(OFF);
         Set_Xenon_Lamp_Curr(0);
         R_BRIGHTNESS_SET = 0;
