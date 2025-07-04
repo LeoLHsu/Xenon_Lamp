@@ -4,6 +4,8 @@
 
 // #define XENON_PRINT
 
+#define USE_LINEAR_ILLUMINATION
+
 #define XENON_LAMP_CURR_MAX                 (10)        // unit A
 
 #define XENON_LAMP_CONTROLER_CURR_MAX       (12)        // unit A
@@ -28,6 +30,11 @@ typedef enum {
     SHOTDOWN,
     XENON_CTRL_STEP_MAX
 } Xenon_Ctrl_Step_t;
+
+typedef struct {
+    uint8_t duty;       // percentage
+    float value;        // unit: lx
+} IlluminationPara_t;
 
 extern Xenon_Ctrl_Step_t XenonLampCtrlStep;
 extern float XenonLampVol;

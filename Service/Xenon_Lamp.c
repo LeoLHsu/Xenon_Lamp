@@ -22,6 +22,30 @@ float XenonLampTemp = 0.f;
 uint32_t XenonLampWorkTimer_1s;
 uint32_t XenonLampWorkTimer_Min;
 
+static IlluminationPara_t Illumination[21] = {       /* Illumination at 8mm photosensitive surface and 5mm distance */
+    {0,     0       },
+    {5,     0       },
+    {10,    0       },
+    {15,    0       },
+    {20,    0       },
+    {25,    41000   },
+    {30,    59500   },
+    {35,    75000   },
+    {40,    90500   },
+    {45,    105250  },
+    {50,    120000  },
+    {55,    134500  },
+    {60,    151500  },
+    {65,    169250  },
+    {70,    187000  },
+    {75,    0       },
+    {80,    0       },
+    {85,    0       },
+    {90,    0       },
+    {95,    0       },
+    {100,   0       },
+};
+
 void Set_Xenon_Lamp_IncLED(uint8_t newState)
 {
     HAL_GPIO_WritePin(LAMP_IND_LED0_GPIO_Port, LAMP_IND_LED0_Pin, !!newState);
@@ -43,6 +67,65 @@ void Set_Xenon_Lamp_Curr(float newCurr)
     }
 
     HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, newDacValue);
+}
+
+int8_t Set_Xenon_Lamp_Illumination(uint16_t percentage)
+{
+    float duty = 0, setIrradiance = 0;
+
+    if (percentage > R_BRIGHTNESS_SET_MAX) {
+        percentage = R_BRIGHTNESS_SET_MAX;
+    }
+
+#ifdef USE_LINEAR_ILLUMINATION
+    uint8_t lower = 0, upper = 0;
+    int8_t i = 0, j = 0;
+
+    for (i = 0; i <= 21; i++) {
+        if (Illumination[i].value != 0) {
+            lower = i;
+            break;
+        }
+    }
+    for (j = 21; j >= 0; j--) {
+        if (Illumination[j].value != 0) {
+            upper = j;
+            break;
+        }
+    }
+
+    if ((i > 21) || (j < 0) || (upper < lower)) {
+        return -1;
+    } else {
+        if (percentage == 0) {
+            duty = Illumination[lower].duty;
+        } else if (percentage == 100) {
+            duty = Illumination[upper].duty;
+        } else {
+            setIrradiance = (float)percentage / 100 * Illumination[upper].value;
+            if (setIrradiance < Illumination[lower].value) {
+                duty = Illumination[lower].duty;
+            } else {
+                for (i = lower; i <= upper; i++) {
+                    if ((setIrradiance >= Illumination[i].value) && (setIrradiance < Illumination[i + 1].value)) {
+                        duty = Illumination[i].duty;
+                        duty += (setIrradiance - Illumination[i].value) /
+                                (Illumination[i + 1].value - Illumination[i].value) *
+                                (Illumination[i + 1].duty - Illumination[i].duty);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+#else
+    (void)(setIrradiance);
+    (void)(Illumination);
+    duty = percentage;
+#endif
+
+    Set_Xenon_Lamp_Curr(duty / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
+    return 0;
 }
 
 void Xenon_Lamp_Initial(void)
@@ -173,7 +256,9 @@ void Xenon_Lamp_Service(void)
                         } else {
                             brightnessSet_Pre = R_BRIGHTNESS_SET;
                         }
-                        Set_Xenon_Lamp_Curr((float)brightnessSet_Pre / R_BRIGHTNESS_SET_MAX * XENON_LAMP_CURR_MAX);
+                        if (0 != Set_Xenon_Lamp_Illumination(brightnessSet_Pre)) {
+                            XenonLampCtrlStep = TURN_ON_FAILED;
+                        }
                         if (XenonLampVol > XENON_LAMP_LIFE_IND_VOL) {
                             if (XenonLampCtrlCnt < 0) {
                                 XenonLampCtrlCnt = 0;
