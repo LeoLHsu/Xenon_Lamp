@@ -22,6 +22,11 @@ float XenonLampTemp = 0.f;
 uint32_t XenonLampWorkTimer_1s;
 uint32_t XenonLampWorkTimer_Min;
 
+void Set_Xenon_Lamp_IncLED(uint8_t newState)
+{
+    HAL_GPIO_WritePin(LAMP_IND_LED0_GPIO_Port, LAMP_IND_LED0_Pin, !!newState);
+}
+
 void Set_Xenon_Lamp_Enable(uint8_t newState)
 {
     HAL_GPIO_WritePin(LAMP_EN_GPIO_Port, LAMP_EN_Pin, !!newState);
@@ -222,6 +227,12 @@ void Xenon_Lamp_Service(void)
         Set_Xenon_Lamp_Curr(0);
         R_BRIGHTNESS_SET = 0;
         R_BRIGHTNESS_CURR = 0;
+    }
+
+    if (XenonLampCtrlStep == DIMMING) {
+        Set_Xenon_Lamp_IncLED(ON);
+    } else {
+        Set_Xenon_Lamp_IncLED(OFF);
     }
 
     if (SYS_TIM_FLAG_500MS) {
