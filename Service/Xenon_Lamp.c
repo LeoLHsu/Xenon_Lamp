@@ -28,22 +28,22 @@ static IlluminationPara_t Illumination[21] = {       /* Illumination at 8mm phot
     {10,    0       },
     {15,    0       },
     {20,    0       },
-    {25,    41000   },
-    {30,    59500   },
-    {35,    75000   },
-    {40,    90500   },
-    {45,    105250  },
-    {50,    120000  },
-    {55,    134500  },
-    {60,    151500  },
-    {65,    169250  },
-    {70,    187000  },
-    {75,    0       },
-    {80,    0       },
-    {85,    0       },
-    {90,    0       },
-    {95,    0       },
-    {100,   0       },
+    {25,    0       },
+    {30,    0       },
+    {35,    45500   },
+    {40,    60500   },
+    {45,    78000   },
+    {50,    95500   },
+    {55,    114500  },
+    {60,    133500  },
+    {65,    154375  },
+    {70,    175250  },
+    {75,    196625  },
+    {80,    218000  },
+    {85,    240750  },
+    {90,    263500  },
+    {95,    283000  },
+    {100,   302500  },
 };
 
 void Set_Xenon_Lamp_IncLED(uint8_t newState)
@@ -218,7 +218,7 @@ void Xenon_Lamp_Service(void)
             if (R_BRIGHTNESS_SET) {
                 switch (XenonLampCtrlStep) {
                     case ESTABLISH_CURR:
-                        Set_Xenon_Lamp_Curr(XENON_LAMP_CURR_MAX);
+                        Set_Xenon_Lamp_Curr(XENON_LAMP_START_CURR);
                         XenonLampCtrlStep = DRIVE_ENABLE;
                         brightnessSet_Pre = 100;
                         break;
@@ -232,7 +232,7 @@ void Xenon_Lamp_Service(void)
                         if (XenonLampCtrlTimer) {
                             XenonLampCtrlTimer--;
                             if ((fabs(XenonLampVol) > 1e-6) && (XenonLampVol < XENON_LAMP_LIFE_IND_VOL) && \
-                                    (fabs(XenonLampCurr - XENON_LAMP_CURR_MAX) < (XENON_LAMP_CURR_MAX * 10 / 100))) {
+                                    (fabs(XenonLampCurr - XENON_LAMP_START_CURR) < (XENON_LAMP_START_CURR * 10 / 100))) {
                                 if (++XenonLampCtrlCnt > 2) {
                                     XenonLampCtrlCnt = 0;
                                     XenonLampCtrlTimer = 0;
