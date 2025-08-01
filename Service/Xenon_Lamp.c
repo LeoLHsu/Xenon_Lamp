@@ -187,32 +187,37 @@ void Xenon_Lamp_Service(void)
             XenonLampVol = (float)ADC1FilterResult[ADC1_RANK_LMAP_VOL] * ADC_DAC_VEF_VOL / 65535 * 101;
             XenonLampCurr = (float)ADC1FilterResult[ADC1_RANK_LMAP_CURR] * ADC_DAC_VEF_VOL / 65535 / 0.25;
             XenonLampTemp = Calculate_Temperature(ADC1FilterResult[ADC1_RANK_TEMP]);
-            if (XenonLampTemp >= XENON_LAMP_SHOTDOWN_TMEP) {
-                ModuleError.bits.lightTemp = 0;
-                ModuleError.bits.lightTempShotdown = 1;
-            } else if (XenonLampTemp >= XENON_LAMP_ERROR_TMEP) {
-                ModuleError.bits.lightTemp = 1;
-                ModuleError.bits.lightTempShotdown = 0;
+
+            if (R_BRIGHTNESS_SET) {
+                if (XenonLampTemp >= XENON_LAMP_SHOTDOWN_TMEP) {
+                    ModuleError.bits.lightTemp = 0;
+                    ModuleError.bits.lightTempShotdown = 1;
+                } else if (XenonLampTemp >= XENON_LAMP_ERROR_TMEP) {
+                    ModuleError.bits.lightTemp = 1;
+                    ModuleError.bits.lightTempShotdown = 0;
+                } else {
+                    ModuleError.bits.lightTemp = 0;
+                    ModuleError.bits.lightTempShotdown = 0;
+                }
+                if (R_LIGHT_WORK_HOUR >= R_LIGHT_LIFE_HOUR) {
+                    ModuleError.bits.lightLife = 0;
+                    ModuleError.bits.lightLifeShotdown = 1;
+                } else if (R_LIGHT_WORK_HOUR >= (uint16_t)(R_LIGHT_LIFE_HOUR * XENON_LAMP_SHOTDOWN_LIFE_FACTOR)) {
+                    ModuleError.bits.lightLife = 1;
+                    ModuleError.bits.lightLifeShotdown = 0;
+                } else {
+                    ModuleError.bits.lightLife = 0;
+                    ModuleError.bits.lightLifeShotdown = 0;
+                }
             } else {
                 ModuleError.bits.lightTemp = 0;
                 ModuleError.bits.lightTempShotdown = 0;
-            }
-            if (R_LIGHT_WORK_HOUR >= R_LIGHT_LIFE_HOUR) {
-                ModuleError.bits.lightLife = 0;
-                ModuleError.bits.lightLifeShotdown = 1;
-            } else if (R_LIGHT_WORK_HOUR >= (uint16_t)(R_LIGHT_LIFE_HOUR * XENON_LAMP_SHOTDOWN_LIFE_FACTOR)) {
-                ModuleError.bits.lightLife = 1;
-                ModuleError.bits.lightLifeShotdown = 0;
-            } else {
                 ModuleError.bits.lightLife = 0;
                 ModuleError.bits.lightLifeShotdown = 0;
             }
+
             if (ModuleError.bits.lightTempShotdown || ModuleError.bits.lightLifeShotdown) {
                 XenonLampCtrlStep = SHOTDOWN;
-            } else {
-                if (XenonLampCtrlStep == SHOTDOWN) {
-                    XenonLampCtrlStep = ESTABLISH_CURR;
-                }
             }
 
             if (R_BRIGHTNESS_SET) {
@@ -287,9 +292,7 @@ void Xenon_Lamp_Service(void)
                         break;
                 }
             } else {
-                if (XenonLampCtrlStep != SHOTDOWN) {
-                    XenonLampCtrlStep = ESTABLISH_CURR;
-                }
+                XenonLampCtrlStep = ESTABLISH_CURR;
                 Set_Xenon_Lamp_Enable(OFF);
                 Set_Xenon_Lamp_Curr(0);
 
@@ -305,9 +308,7 @@ void Xenon_Lamp_Service(void)
         R_LIGHT_FILTER_SET = XenonLampFilterSetPre;
         R_LIGHT_FILTER_CURR = XenonLampFilterSetPre;
 
-        if (XenonLampCtrlStep != SHOTDOWN) {
-            XenonLampCtrlStep = ESTABLISH_CURR;
-        }
+        XenonLampCtrlStep = ESTABLISH_CURR;
         Set_Xenon_Lamp_Enable(OFF);
         Set_Xenon_Lamp_Curr(0);
         R_BRIGHTNESS_SET = 0;

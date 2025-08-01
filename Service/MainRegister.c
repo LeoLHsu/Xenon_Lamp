@@ -9,12 +9,12 @@ const uint16_t ModuleErrorList[ERROR_MAX] = {
     (ONCE << 15)    | (ADVISE << 12)    | ERROR_BRIGHTNESS_SETTING,
     (ONCE << 15)    | (ADVISE << 12)    | ERROR_FILTER_SETTING,
 
-    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_LIFE,
+    (ONCE << 15)    | (SERIOUS << 12)   | ERROR_LIGHT_LIFE,
     (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_LIFE_SHOTDOWN,
     (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_HAREWARE_LIFE,
     (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_DAMAGE,
 
-    (CYCLE << 15)   | (SERIOUS << 12)   | ERROR_LIGHT_TEMP,
+    (ONCE << 15)    | (SERIOUS << 12)   | ERROR_LIGHT_TEMP,
     (ONCE << 15)    | (FATAL << 12)     | ERROR_LIGHT_TEMP_SHOTDOWN,
     (ONCE << 15)    | (SERIOUS << 12)   | ERROR_FILTER_MOTOR,
     (CYCLE << 15)   | (FATAL << 12)     | ERROR_EXTERNAL_OSC,
