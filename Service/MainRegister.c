@@ -35,7 +35,16 @@ void MainReg_Initial(void)
     memcpy(R_HARDWARE_VER_PTR, HARDWARE_VER, 2);
     memcpy(R_SOFTWARE_VER_PTR, SOFTWARE_VER, 2);
     memcpy(R_SOFTWARE_TIME_PTR, SOFTWARE_TIME, 12);
-    R_SOFTWARE_INDISE_VER_PTR = SOFTWARE_INSIDE_VER;
+
+#if defined(BOOTLOADER) && !defined(DEBUG)
+    uint32_t appMarker = *((uint32_t *)(FLASH_BANK1_BASE + BOOT_FLASH_APP_MARKER_OFFSET));
+    R_SOFTWARE_INDISE_VER = (uint16_t)(appMarker >> 16);
+    R_SOFTWARE_INDISE_TIME = (uint16_t)(appMarker >> 0);
+#else
+    R_SOFTWARE_INDISE_VER = 0;
+    R_SOFTWARE_INDISE_TIME = 0;
+#endif
+
     ModuleError.flg = 0;
 }
 

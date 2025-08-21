@@ -48,7 +48,9 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#ifdef BOOTLOADER
+#define BOOT_FLASH_APP_MARKER_OFFSET        0x20034     // 128K(Bootloader) + 0x32(Offset)
+#endif
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
